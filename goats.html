@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Goats - Goat Farm</title>
+<style>
+body{font-family:Arial;background:#f4f6f8;padding:20px}
+table{width:100%;background:#fff;border-collapse:collapse}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
+button{padding:6px}
+nav a{margin-right:15px}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="goats.html">Goats</a>
+  <a href="finance.html">Finance</a>
+</nav>
+
+<h2>Add Goat</h2>
+
+<input id="gid" placeholder="Goat ID">
+<input id="breed" placeholder="Breed">
+<select id="gender">
+  <option>Male</option>
+  <option>Female</option>
+</select>
+<input type="date" id="dob">
+<select id="femaleStatus">
+  <option>Kid</option>
+  <option>Pregnant</option>
+  <option>Delivered</option>
+</select>
+<input type="file" id="gimage">
+<button onclick="saveGoat()">Save Goat</button>
+
+<h2>Goat List</h2>
+<table>
+<thead>
+<tr><th>ID</th><th>Breed</th><th>Gender</th><th>Action</th></tr>
+</thead>
+<tbody id="goatTable"></tbody>
+</table>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
+  authDomain:"goatfarmmanagement-d7b89.firebaseapp.com",
+  projectId:"goatfarmmanagement-d7b89",
+  storageBucket:"goatfarmmanagement-d7b89.appspot.com"
+});
+
+const db=firebase.firestore();
+const storage=firebase.storage();
+
+db.collection("goats").onSnapshot(s=>{
+  goatTable.innerHTML="";
+  s.forEach(d=>{
+    const g=d.data();
+    goatTable.innerHTML+=`
+<tr>
+<td>${g.gid}</td><td>${g.breed}</td><td>${g.gender}</td>
+<td><button onclick="db.collection('goats').doc('${d.id}').delete()">❌</button></td>
+</tr>`;
+  });
+});
+
+function saveGoat(){
+  const data={
+    gid:gid.value,
+    breed:breed.value,
+    gender:gender.value,
+    dob:dob.value,
+    lifeStatus:gender.value==="Female"?femaleStatus.value:""
+  };
+
+  const file=gimage.files[0];
+  if(file){
+    const r=storage.ref("goats/"+Date.now()+file.name);
+    r.put(file).then(s=>s.ref.getDownloadURL().then(u=>{data.image=u;db.collection("goats").add(data)}));
+  }else{
+    db.collection("goats").add(data);
+  }
+}
+</script>
+
+</body>
+</html>
