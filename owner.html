@@ -14,17 +14,17 @@ body{margin:0;font-family:Arial;background:#f4f6f8;display:flex}
 .main{flex:1;padding:20px}
 .section{display:none}
 .section.active{display:block}
-.cards{display:flex;gap:20px;margin:20px 0}
-.card{background:#fff;padding:20px;border-radius:10px;width:180px;text-align:center}
+.cards{display:flex;gap:15px;margin:15px 0;flex-wrap:wrap}
+.card{background:#fff;padding:15px;border-radius:10px;width:180px;text-align:center}
 .card span{font-size:26px;font-weight:bold}
 input,select,button{padding:8px;margin:5px 0}
 button{background:#2c5364;color:#fff;border:none;cursor:pointer}
 button:hover{background:#203a43}
 table{width:100%;background:#fff;border-collapse:collapse;margin-top:15px}
 th,td{border:1px solid #ddd;padding:8px;text-align:center}
-img{border-radius:5px}
 .edit{background:#ffc107;color:#000}
 .delete{background:#dc3545}
+img{border-radius:5px}
 </style>
 </head>
 
@@ -44,55 +44,56 @@ img{border-radius:5px}
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="section active">
-  <h1>Owner Dashboard</h1>
+  <h1>Dashboard</h1>
   <div class="cards">
-    <div class="card">Total Goats<br><span id="totalGoats">0</span></div>
+    <div class="card">Total Goats<br><span id="dTotal">0</span></div>
+    <div class="card">Male Goats<br><span id="dMale">0</span></div>
+    <div class="card">Female Goats<br><span id="dFemale">0</span></div>
+    <div class="card">Kids<br><span id="dKids">0</span></div>
+    <div class="card">Pregnant<br><span id="dPreg">0</span></div>
+    <div class="card">Income<br>₹<span id="dIncome">0</span></div>
+    <div class="card">Expense<br>₹<span id="dExpense">0</span></div>
+    <div class="card">Profit<br>₹<span id="dProfit">0</span></div>
   </div>
 </div>
 
 <!-- GOATS -->
 <div id="goats" class="section">
-<h1>Goat Management</h1>
+<h2>Add / Edit Goat</h2>
 
 <input type="hidden" id="editGoatId">
-
 <input id="gname" placeholder="Goat Name (optional)">
 <input id="gid" placeholder="Goat ID">
 <input id="breed" placeholder="Breed">
 
 <select id="gender" onchange="checkGender()">
   <option value="">Select Gender</option>
-  <option value="Male">Male</option>
-  <option value="Female">Female</option>
+  <option>Male</option>
+  <option>Female</option>
 </select>
 
 <input type="date" id="dob">
 
 <select id="status">
-  <option value="Live">Live</option>
-  <option value="Dead">Dead</option>
-  <option value="Sold">Sold</option>
+  <option>Live</option>
+  <option>Dead</option>
+  <option>Sold</option>
 </select>
 
 <select id="femaleStatus" style="display:none">
-  <option value="">Female Life Status</option>
-  <option value="Kid">Kid</option>
-  <option value="Pregnant">Pregnant</option>
-  <option value="Delivered">Delivered</option>
+  <option value="">Female Status</option>
+  <option>Kid</option>
+  <option>Pregnant</option>
+  <option>Delivered</option>
 </select>
 
-<input type="file" id="image">
-
-<br>
 <button onclick="saveGoat()">Save Goat</button>
 
-<h2>Goat List</h2>
 <table>
 <thead>
 <tr>
-<th>Image</th><th>ID</th><th>Name</th><th>Breed</th>
-<th>Gender</th><th>DOB</th><th>Age</th>
-<th>Status</th><th>Life</th><th>Action</th>
+<th>ID</th><th>Name</th><th>Breed</th><th>Gender</th>
+<th>DOB</th><th>Status</th><th>Life</th><th>Action</th>
 </tr>
 </thead>
 <tbody id="goatTable"></tbody>
@@ -101,9 +102,9 @@ img{border-radius:5px}
 
 <!-- FINANCE -->
 <div id="finance" class="section">
-<h1>Finance</h1>
+<h2>Finance</h2>
 
-<input type="hidden" id="editFinanceId">
+<input type="hidden" id="editFinId">
 
 <select id="fType">
   <option value="income">Income</option>
@@ -112,14 +113,11 @@ img{border-radius:5px}
 <input id="fCategory" placeholder="Category">
 <input id="fAmount" type="number" placeholder="Amount">
 <input id="fNote" placeholder="Note">
-<button onclick="saveFinance()">Save Entry</button>
+<button onclick="saveFinance()">Save</button>
 
-<h2>Records</h2>
 <table>
 <thead>
-<tr>
-<th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>Action</th>
-</tr>
+<tr><th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>Action</th></tr>
 </thead>
 <tbody id="financeTable"></tbody>
 </table>
@@ -130,18 +128,15 @@ img{border-radius:5px}
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
-  authDomain: "goatfarmmanagement-d7b89.firebaseapp.com",
-  projectId: "goatfarmmanagement-d7b89",
-  storageBucket: "goatfarmmanagement-d7b89.appspot.com"
+  apiKey:"AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
+  authDomain:"goatfarmmanagement-d7b89.firebaseapp.com",
+  projectId:"goatfarmmanagement-d7b89"
 });
 
 const db=firebase.firestore();
-const storage=firebase.storage();
 
 function show(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -152,32 +147,26 @@ function checkGender(){
   femaleStatus.style.display=gender.value==="Female"?"block":"none";
 }
 
-// 🔹 AGE CALCULATION
-function calcAge(dob){
-  if(!dob) return "-";
-  const birth=new Date(dob);
-  const now=new Date();
-  let years=now.getFullYear()-birth.getFullYear();
-  let months=now.getMonth()-birth.getMonth();
-  if(months<0){years--;months+=12}
-  return `${years}Y ${months}M`;
-}
-
-// 🔹 LOAD GOATS
+/* ===== GOATS LIST & DASHBOARD COUNTS ===== */
 db.collection("goats").onSnapshot(s=>{
   goatTable.innerHTML="";
-  totalGoats.innerText=s.size;
+  let total=0,male=0,female=0,kids=0,preg=0;
+
   s.forEach(d=>{
     const g=d.data();
+    total++;
+    if(g.gender==="Male") male++;
+    if(g.gender==="Female") female++;
+    if(g.lifeStatus==="Kid") kids++;
+    if(g.lifeStatus==="Pregnant") preg++;
+
     goatTable.innerHTML+=`
 <tr>
-<td>${g.image?`<img src="${g.image}" width="50">`:"-"}</td>
 <td>${g.gid}</td>
 <td>${g.name||""}</td>
 <td>${g.breed}</td>
 <td>${g.gender}</td>
-<td>${g.dob}</td>
-<td>${calcAge(g.dob)}</td>
+<td>${g.dob||""}</td>
 <td>${g.status}</td>
 <td>${g.lifeStatus||"-"}</td>
 <td>
@@ -186,8 +175,43 @@ db.collection("goats").onSnapshot(s=>{
 </td>
 </tr>`;
   });
+
+  dTotal.innerText=total;
+  dMale.innerText=male;
+  dFemale.innerText=female;
+  dKids.innerText=kids;
+  dPreg.innerText=preg;
 });
 
+/* ===== FINANCE & DASHBOARD TOTALS ===== */
+db.collection("finance").onSnapshot(s=>{
+  financeTable.innerHTML="";
+  let inc=0,exp=0;
+
+  s.forEach(d=>{
+    const f=d.data();
+    if(f.type==="income") inc+=f.amount;
+    if(f.type==="expense") exp+=f.amount;
+
+    financeTable.innerHTML+=`
+<tr>
+<td>${f.type}</td>
+<td>${f.category}</td>
+<td>₹${f.amount}</td>
+<td>${f.note||""}</td>
+<td>
+<button class="edit" onclick="editFinance('${d.id}',${JSON.stringify(f).replace(/"/g,'&quot;')})">✏️</button>
+<button class="delete" onclick="db.collection('finance').doc('${d.id}').delete()">❌</button>
+</td>
+</tr>`;
+  });
+
+  dIncome.innerText=inc;
+  dExpense.innerText=exp;
+  dProfit.innerText=inc-exp;
+});
+
+/* ===== SAVE / EDIT ===== */
 function editGoat(id,g){
   show('goats');
   editGoatId.value=id;
@@ -195,12 +219,11 @@ function editGoat(id,g){
   gid.value=g.gid;
   breed.value=g.breed;
   gender.value=g.gender;
-  dob.value=g.dob;
+  dob.value=g.dob||"";
   status.value=g.status;
   femaleStatus.value=g.lifeStatus||"";
   checkGender();
 }
-
 function saveGoat(){
   const data={
     name:gname.value,
@@ -218,35 +241,14 @@ function saveGoat(){
   }
   editGoatId.value="";
 }
-
-// 🔹 FINANCE
-db.collection("finance").onSnapshot(s=>{
-  financeTable.innerHTML="";
-  s.forEach(d=>{
-    const f=d.data();
-    financeTable.innerHTML+=`
-<tr>
-<td>${f.type}</td>
-<td>${f.category}</td>
-<td>₹${f.amount}</td>
-<td>${f.note||""}</td>
-<td>
-<button class="edit" onclick="editFinance('${d.id}',${JSON.stringify(f).replace(/"/g,'&quot;')})">✏️</button>
-<button class="delete" onclick="db.collection('finance').doc('${d.id}').delete()">❌</button>
-</td>
-</tr>`;
-  });
-});
-
 function editFinance(id,f){
   show('finance');
-  editFinanceId.value=id;
+  editFinId.value=id;
   fType.value=f.type;
   fCategory.value=f.category;
   fAmount.value=f.amount;
   fNote.value=f.note||"";
 }
-
 function saveFinance(){
   const data={
     type:fType.value,
@@ -254,12 +256,12 @@ function saveFinance(){
     amount:Number(fAmount.value),
     note:fNote.value
   };
-  if(editFinanceId.value){
-    db.collection("finance").doc(editFinanceId.value).update(data);
+  if(editFinId.value){
+    db.collection("finance").doc(editFinId.value).update(data);
   }else{
     db.collection("finance").add(data);
   }
-  editFinanceId.value="";
+  editFinId.value="";
 }
 </script>
 
