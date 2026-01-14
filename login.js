@@ -1,16 +1,27 @@
 document.getElementById("loginBtn").addEventListener("click", function () {
+
   var email = document.getElementById("email").value;
   var password = document.getElementById("password").value;
+  var msg = document.getElementById("msg");
+
+  msg.innerText = "";
+
+  if (email === "" || password === "") {
+    msg.innerText = "Please enter email and password";
+    return;
+  }
+
   firebase.auth().signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      var user = userCredential.user.email;
-      if (user === "admin@gmail.com") {
+    .then(function (userCredential) {
+      var userEmail = userCredential.user.email;
+
+      if (userEmail === "admin@gmail.com") {
         window.location.href = "owner.html";
       } else {
         window.location.href = "worker.html";
       }
     })
-    .catch((error) => {
-      document.getElementById("msg").innerText = error.message;
+    .catch(function (error) {
+      msg.innerText = error.message;
     });
 });
