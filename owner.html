@@ -1,10 +1,251 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Owner Dashboard</title>
+  <meta charset="UTF-8">
+  <title>Owner Dashboard - Goat Farm</title>
+
+  <!-- 🔵 INLINE CSS -->
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f4f6f8;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      background: #203a43;
+      color: white;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar li {
+      padding: 12px;
+      cursor: pointer;
+      margin: 6px 0;
+      background: #2c5364;
+      border-radius: 5px;
+    }
+
+    .sidebar li:hover {
+      background: #3b6f82;
+    }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* CARDS */
+    .cards {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 150px;
+      text-align: center;
+      font-size: 18px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .card span {
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    /* FORM */
+    input, select, button {
+      padding: 8px;
+      margin: 5px 0;
+    }
+
+    button {
+      background: #2c5364;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #203a43;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      margin-top: 20px;
+      background: white;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>👑 OWNER DASHBOARD</h1>
-  <p>Welcome Admin</p>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>🐐 Goat Farm</h2>
+  <ul>
+    <li onclick="showSection('dashboard')">📊 Dashboard</li>
+    <li onclick="showSection('goats')">🐐 Goats</li>
+    <li onclick="showSection('workers')">👷 Workers</li>
+    <li onclick="showSection('finance')">💰 Finance</li>
+    <li onclick="logout()">🚪 Logout</li>
+  </ul>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section active">
+    <h1>Owner Dashboard</h1>
+    <div class="cards">
+      <div class="card">Total Goats<br><span id="totalGoats">0</span></div>
+    </div>
+  </div>
+
+  <!-- GOATS -->
+  <div id="goats" class="section">
+    <h1>Goat Records</h1>
+
+    <h3>Add Goat</h3>
+    <input id="gid" placeholder="Goat ID">
+    <input id="breed" placeholder="Breed">
+    <select id="gender">
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+    <input id="age" placeholder="Age (Years)">
+    <button onclick="addGoat()">Add Goat</button>
+
+    <h3>Goat List</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Breed</th>
+          <th>Gender</th>
+          <th>Age</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="goatTable"></tbody>
+    </table>
+  </div>
+
+  <!-- WORKERS -->
+  <div id="workers" class="section">
+    <h1>Workers</h1>
+    <p>Total Workers: 1</p>
+  </div>
+
+  <!-- FINANCE -->
+  <div id="finance" class="section">
+    <h1>Finance</h1>
+    <p>Coming next step</p>
+  </div>
+
+</div>
+
+<!-- 🔴 FIREBASE SCRIPTS -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script src="firebase.js"></script>
+
+<!-- 🔵 OWNER LOGIC -->
+<script>
+  var db = firebase.firestore();
+
+  function showSection(id) {
+    document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  function logout() {
+    window.location.href = "index.html";
+  }
+
+  // LOAD GOATS
+  db.collection("goats").onSnapshot(snapshot => {
+    const table = document.getElementById("goatTable");
+    const total = document.getElementById("totalGoats");
+    table.innerHTML = "";
+    total.innerText = snapshot.size;
+
+    snapshot.forEach(doc => {
+      const g = doc.data();
+      table.innerHTML += `
+        <tr>
+          <td>${g.gid}</td>
+          <td>${g.breed}</td>
+          <td>${g.gender}</td>
+          <td>${g.age}</td>
+          <td><button onclick="deleteGoat('${doc.id}')">❌</button></td>
+        </tr>
+      `;
+    });
+  });
+
+  function addGoat() {
+    const gid = document.getElementById("gid").value;
+    const breed = document.getElementById("breed").value;
+    const gender = document.getElementById("gender").value;
+    const age = document.getElementById("age").value;
+
+    if (!gid || !breed || !age) {
+      alert("Fill all fields");
+      return;
+    }
+
+    db.collection("goats").add({ gid, breed, gender, age });
+
+    document.getElementById("gid").value = "";
+    document.getElementById("breed").value = "";
+    document.getElementById("age").value = "";
+  }
+
+  function deleteGoat(id) {
+    if (confirm("Delete this goat?")) {
+      db.collection("goats").doc(id).delete();
+    }
+  }
+</script>
+
 </body>
 </html>
