@@ -5,70 +5,31 @@
 <title>Goat Farm Owner Dashboard</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#f4f6f8;
-  display:flex;
-}
-.sidebar{
-  width:220px;
-  background:#203a43;
-  color:#fff;
-  height:100vh;
-  padding:20px;
-}
-.sidebar h2{text-align:center;}
-.sidebar ul{list-style:none;padding:0;}
-.sidebar li{
-  background:#2c5364;
-  padding:12px;
-  margin:6px 0;
-  border-radius:5px;
-  cursor:pointer;
-}
-.sidebar li:hover{background:#3b6f82;}
-.main{flex:1;padding:20px;}
-.section{display:none;}
-.section.active{display:block;}
-.cards{display:flex;gap:20px;margin:20px 0;}
-.card{
-  background:#fff;
-  padding:20px;
-  border-radius:10px;
-  width:180px;
-  text-align:center;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);
-}
-.card span{font-size:26px;font-weight:bold;}
-input,select,button{
-  padding:8px;
-  margin:5px 0;
-}
-button{
-  background:#2c5364;
-  color:#fff;
-  border:none;
-  cursor:pointer;
-}
-button:hover{background:#203a43;}
-table{
-  width:100%;
-  margin-top:15px;
-  background:#fff;
-  border-collapse:collapse;
-}
-th,td{
-  border:1px solid #ddd;
-  padding:10px;
-  text-align:center;
-}
+body{margin:0;font-family:Arial;background:#f4f6f8;display:flex}
+.sidebar{width:220px;background:#203a43;color:#fff;height:100vh;padding:20px}
+.sidebar h2{text-align:center}
+.sidebar ul{list-style:none;padding:0}
+.sidebar li{background:#2c5364;padding:12px;margin:6px 0;border-radius:5px;cursor:pointer}
+.sidebar li:hover{background:#3b6f82}
+.main{flex:1;padding:20px}
+.section{display:none}
+.section.active{display:block}
+.cards{display:flex;gap:20px;margin:20px 0}
+.card{background:#fff;padding:20px;border-radius:10px;width:180px;text-align:center}
+.card span{font-size:26px;font-weight:bold}
+input,select,button{padding:8px;margin:5px 0}
+button{background:#2c5364;color:#fff;border:none;cursor:pointer}
+button:hover{background:#203a43}
+table{width:100%;background:#fff;border-collapse:collapse;margin-top:15px}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
+img{border-radius:5px}
+.edit{background:#ffc107;color:#000}
+.delete{background:#dc3545}
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <h2>🐐 Goat Farm</h2>
   <ul>
@@ -79,7 +40,6 @@ th,td{
   </ul>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
 <!-- DASHBOARD -->
@@ -87,133 +47,220 @@ th,td{
   <h1>Owner Dashboard</h1>
   <div class="cards">
     <div class="card">Total Goats<br><span id="totalGoats">0</span></div>
-    <div class="card">Income<br>₹<span id="dashIncome">0</span></div>
-    <div class="card">Expense<br>₹<span id="dashExpense">0</span></div>
-    <div class="card">Profit<br>₹<span id="dashProfit">0</span></div>
   </div>
 </div>
 
 <!-- GOATS -->
 <div id="goats" class="section">
-  <h1>Goat Records</h1>
+<h1>Goat Management</h1>
 
-  <h3>Add Goat</h3>
-  <input id="gid" placeholder="Goat ID">
-  <input id="breed" placeholder="Breed">
-  <select id="gender">
-    <option>Male</option>
-    <option>Female</option>
-  </select>
-  <input id="age" placeholder="Age">
-  <button onclick="addGoat()">Add Goat</button>
+<input type="hidden" id="editGoatId">
 
-  <table>
-    <thead>
-      <tr><th>ID</th><th>Breed</th><th>Gender</th><th>Age</th><th>❌</th></tr>
-    </thead>
-    <tbody id="goatTable"></tbody>
-  </table>
+<input id="gname" placeholder="Goat Name (optional)">
+<input id="gid" placeholder="Goat ID">
+<input id="breed" placeholder="Breed">
+
+<select id="gender" onchange="checkGender()">
+  <option value="">Select Gender</option>
+  <option value="Male">Male</option>
+  <option value="Female">Female</option>
+</select>
+
+<input type="date" id="dob">
+
+<select id="status">
+  <option value="Live">Live</option>
+  <option value="Dead">Dead</option>
+  <option value="Sold">Sold</option>
+</select>
+
+<select id="femaleStatus" style="display:none">
+  <option value="">Female Life Status</option>
+  <option value="Kid">Kid</option>
+  <option value="Pregnant">Pregnant</option>
+  <option value="Delivered">Delivered</option>
+</select>
+
+<input type="file" id="image">
+
+<br>
+<button onclick="saveGoat()">Save Goat</button>
+
+<h2>Goat List</h2>
+<table>
+<thead>
+<tr>
+<th>Image</th><th>ID</th><th>Name</th><th>Breed</th>
+<th>Gender</th><th>DOB</th><th>Age</th>
+<th>Status</th><th>Life</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="goatTable"></tbody>
+</table>
 </div>
 
 <!-- FINANCE -->
 <div id="finance" class="section">
-  <h1>Finance</h1>
+<h1>Finance</h1>
 
-  <h3>Add Entry</h3>
-  <select id="fType">
-    <option value="income">Income</option>
-    <option value="expense">Expense</option>
-  </select>
-  <input id="fCategory" placeholder="Category">
-  <input id="fAmount" type="number" placeholder="Amount">
-  <input id="fNote" placeholder="Note">
-  <button onclick="addFinance()">Add</button>
+<input type="hidden" id="editFinanceId">
 
-  <h3>Summary</h3>
-  <p>Income: ₹<span id="totalIncome">0</span></p>
-  <p>Expense: ₹<span id="totalExpense">0</span></p>
-  <h2>Profit: ₹<span id="netProfit">0</span></h2>
+<select id="fType">
+  <option value="income">Income</option>
+  <option value="expense">Expense</option>
+</select>
+<input id="fCategory" placeholder="Category">
+<input id="fAmount" type="number" placeholder="Amount">
+<input id="fNote" placeholder="Note">
+<button onclick="saveFinance()">Save Entry</button>
 
-  <table>
-    <thead>
-      <tr><th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>❌</th></tr>
-    </thead>
-    <tbody id="financeTable"></tbody>
-  </table>
+<h2>Records</h2>
+<table>
+<thead>
+<tr>
+<th>Type</th><th>Category</th><th>Amount</th><th>Note</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="financeTable"></tbody>
+</table>
 </div>
 
 </div>
 
-<!-- FIREBASE SDK -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <script>
-// 🔴 FIREBASE CONFIG (YOUR PROJECT)
 firebase.initializeApp({
   apiKey: "AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
   authDomain: "goatfarmmanagement-d7b89.firebaseapp.com",
-  projectId: "goatfarmmanagement-d7b89"
+  projectId: "goatfarmmanagement-d7b89",
+  storageBucket: "goatfarmmanagement-d7b89.appspot.com"
 });
 
-const db = firebase.firestore();
+const db=firebase.firestore();
+const storage=firebase.storage();
 
-// NAV
 function show(id){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function logout(){ location.href="index.html"; }
+function logout(){location.href="index.html"}
+function checkGender(){
+  femaleStatus.style.display=gender.value==="Female"?"block":"none";
+}
 
-// ===== GOATS =====
+// 🔹 AGE CALCULATION
+function calcAge(dob){
+  if(!dob) return "-";
+  const birth=new Date(dob);
+  const now=new Date();
+  let years=now.getFullYear()-birth.getFullYear();
+  let months=now.getMonth()-birth.getMonth();
+  if(months<0){years--;months+=12}
+  return `${years}Y ${months}M`;
+}
+
+// 🔹 LOAD GOATS
 db.collection("goats").onSnapshot(s=>{
   goatTable.innerHTML="";
   totalGoats.innerText=s.size;
   s.forEach(d=>{
     const g=d.data();
     goatTable.innerHTML+=`
-    <tr>
-      <td>${g.gid}</td><td>${g.breed}</td><td>${g.gender}</td><td>${g.age}</td>
-      <td><button onclick="delGoat('${d.id}')">❌</button></td>
-    </tr>`;
+<tr>
+<td>${g.image?`<img src="${g.image}" width="50">`:"-"}</td>
+<td>${g.gid}</td>
+<td>${g.name||""}</td>
+<td>${g.breed}</td>
+<td>${g.gender}</td>
+<td>${g.dob}</td>
+<td>${calcAge(g.dob)}</td>
+<td>${g.status}</td>
+<td>${g.lifeStatus||"-"}</td>
+<td>
+<button class="edit" onclick="editGoat('${d.id}',${JSON.stringify(g).replace(/"/g,'&quot;')})">✏️</button>
+<button class="delete" onclick="db.collection('goats').doc('${d.id}').delete()">❌</button>
+</td>
+</tr>`;
   });
 });
-function addGoat(){
-  db.collection("goats").add({
-    gid:gid.value,breed:breed.value,gender:gender.value,age:age.value
-  });
-  gid.value=breed.value=age.value="";
-}
-function delGoat(id){db.collection("goats").doc(id).delete();}
 
-// ===== FINANCE =====
+function editGoat(id,g){
+  show('goats');
+  editGoatId.value=id;
+  gname.value=g.name||"";
+  gid.value=g.gid;
+  breed.value=g.breed;
+  gender.value=g.gender;
+  dob.value=g.dob;
+  status.value=g.status;
+  femaleStatus.value=g.lifeStatus||"";
+  checkGender();
+}
+
+function saveGoat(){
+  const data={
+    name:gname.value,
+    gid:gid.value,
+    breed:breed.value,
+    gender:gender.value,
+    dob:dob.value,
+    status:status.value,
+    lifeStatus:gender.value==="Female"?femaleStatus.value:""
+  };
+  if(editGoatId.value){
+    db.collection("goats").doc(editGoatId.value).update(data);
+  }else{
+    db.collection("goats").add(data);
+  }
+  editGoatId.value="";
+}
+
+// 🔹 FINANCE
 db.collection("finance").onSnapshot(s=>{
-  let inc=0,exp=0;
   financeTable.innerHTML="";
   s.forEach(d=>{
     const f=d.data();
-    f.type=="income"?inc+=f.amount:exp+=f.amount;
     financeTable.innerHTML+=`
-    <tr>
-      <td>${f.type}</td><td>${f.category}</td><td>₹${f.amount}</td><td>${f.note||""}</td>
-      <td><button onclick="delFin('${d.id}')">❌</button></td>
-    </tr>`;
+<tr>
+<td>${f.type}</td>
+<td>${f.category}</td>
+<td>₹${f.amount}</td>
+<td>${f.note||""}</td>
+<td>
+<button class="edit" onclick="editFinance('${d.id}',${JSON.stringify(f).replace(/"/g,'&quot;')})">✏️</button>
+<button class="delete" onclick="db.collection('finance').doc('${d.id}').delete()">❌</button>
+</td>
+</tr>`;
   });
-  totalIncome.innerText=dashIncome.innerText=inc;
-  totalExpense.innerText=dashExpense.innerText=exp;
-  netProfit.innerText=dashProfit.innerText=inc-exp;
 });
-function addFinance(){
-  db.collection("finance").add({
+
+function editFinance(id,f){
+  show('finance');
+  editFinanceId.value=id;
+  fType.value=f.type;
+  fCategory.value=f.category;
+  fAmount.value=f.amount;
+  fNote.value=f.note||"";
+}
+
+function saveFinance(){
+  const data={
     type:fType.value,
     category:fCategory.value,
     amount:Number(fAmount.value),
     note:fNote.value
-  });
-  fCategory.value=fAmount.value=fNote.value="";
+  };
+  if(editFinanceId.value){
+    db.collection("finance").doc(editFinanceId.value).update(data);
+  }else{
+    db.collection("finance").add(data);
+  }
+  editFinanceId.value="";
 }
-function delFin(id){db.collection("finance").doc(id).delete();}
 </script>
 
 </body>
