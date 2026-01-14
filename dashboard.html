@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard - Goat Farm</title>
+<style>
+body{font-family:Arial;background:#f4f6f8;padding:20px}
+.cards{display:flex;gap:15px;flex-wrap:wrap}
+.card{background:#fff;padding:15px;border-radius:10px;width:180px;text-align:center}
+.card span{font-size:26px;font-weight:bold}
+nav a{margin-right:15px}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="goats.html">Goats</a>
+  <a href="finance.html">Finance</a>
+</nav>
+
+<h1>Dashboard</h1>
+
+<div class="cards">
+  <div class="card">Total Goats<br><span id="dTotal">0</span></div>
+  <div class="card">Male<br><span id="dMale">0</span></div>
+  <div class="card">Female<br><span id="dFemale">0</span></div>
+  <div class="card">Kids<br><span id="dKids">0</span></div>
+  <div class="card">Pregnant<br><span id="dPreg">0</span></div>
+  <div class="card">Income<br>₹<span id="dIncome">0</span></div>
+  <div class="card">Expense<br>₹<span id="dExpense">0</span></div>
+  <div class="card">Profit<br>₹<span id="dProfit">0</span></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
+  authDomain:"goatfarmmanagement-d7b89.firebaseapp.com",
+  projectId:"goatfarmmanagement-d7b89"
+});
+
+const db=firebase.firestore();
+
+// GOATS COUNT
+db.collection("goats").onSnapshot(s=>{
+  let t=0,m=0,f=0,k=0,p=0;
+  s.forEach(d=>{
+    const g=d.data();t++;
+    if(g.gender==="Male")m++;
+    if(g.gender==="Female")f++;
+    if(g.lifeStatus==="Kid")k++;
+    if(g.lifeStatus==="Pregnant")p++;
+  });
+  dTotal.innerText=t;dMale.innerText=m;dFemale.innerText=f;
+  dKids.innerText=k;dPreg.innerText=p;
+});
+
+// FINANCE COUNT
+db.collection("finance").onSnapshot(s=>{
+  let inc=0,exp=0;
+  s.forEach(d=>{
+    const f=d.data();
+    f.type==="income"?inc+=f.amount:exp+=f.amount;
+  });
+  dIncome.innerText=inc;
+  dExpense.innerText=exp;
+  dProfit.innerText=inc-exp;
+});
+</script>
+
+</body>
+</html>
