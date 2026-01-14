@@ -1,13 +1,13 @@
-// firebase.js (COMPAT VERSION)
+// firebase.js (LOAD ONCE)
 
-var firebaseConfig = {
-  apiKey: "AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
-  authDomain: "goatfarmmanagement-d7b89.firebaseapp.com",
-  projectId: "goatfarmmanagement-d7b89",
-  storageBucket: "goatfarmmanagement-d7b89.appspot.com",
-  messagingSenderId: "141604591730",
-  appId: "1:141604591730:web:8736d4cfae6abfa6ebcaeb"
-};
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
+    authDomain: "goatfarmmanagement-d7b89.firebaseapp.com",
+    projectId: "goatfarmmanagement-d7b89",
+    storageBucket: "goatfarmmanagement-d7b89.appspot.com"
+  });
+}
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var storage = firebase.storage();
