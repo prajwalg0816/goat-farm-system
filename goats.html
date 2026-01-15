@@ -30,21 +30,21 @@ img{border-radius:5px}
 
 <select id="gender" onchange="checkGender()">
   <option value="">Select Gender</option>
-  <option>Male</option>
-  <option>Female</option>
+  <option value="Male">Male</option>
+  <option value="Female">Female</option>
 </select>
 
-<label>DOB</label><br>
+<br><label>DOB</label><br>
 <input type="date" id="dob"><br>
 
 <select id="femaleStatus" style="display:none">
   <option value="">Female Life Status</option>
-  <option>Kid</option>
-  <option>Pregnant</option>
-  <option>Delivered</option>
+  <option value="Kid">Kid</option>
+  <option value="Pregnant">Pregnant</option>
+  <option value="Delivered">Delivered</option>
 </select>
 
-<label><b>Goat Image (optional)</b></label><br>
+<br><label>Goat Image (optional)</label><br>
 <input type="file" id="gimage" accept="image/*"><br><br>
 
 <button onclick="saveGoat()">Save Goat</button>
@@ -58,19 +58,19 @@ img{border-radius:5px}
 <th>Breed</th>
 <th>Gender</th>
 <th>DOB</th>
-<th>Life Status</th>
+<th>Life</th>
 <th>❌</th>
 </tr>
 </thead>
 <tbody id="goatTable"></tbody>
 </table>
 
-<!-- 🔴 Firebase SDKs -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-<!-- 🔴 Single Firebase Init -->
+<!-- Single init -->
 <script src="firebase.js"></script>
 
 <script>
@@ -79,11 +79,13 @@ function checkGender(){
 }
 
 // LOAD GOATS
-db.collection("goats").orderBy("createdAt","desc").onSnapshot(snapshot=>{
-  goatTable.innerHTML = "";
-  snapshot.forEach(doc=>{
-    const g = doc.data();
-    goatTable.innerHTML += `
+db.collection("goats")
+  .orderBy("createdAt", "desc")
+  .onSnapshot(snapshot => {
+    goatTable.innerHTML = "";
+    snapshot.forEach(doc => {
+      const g = doc.data();
+      goatTable.innerHTML += `
 <tr>
 <td>${g.image ? `<img src="${g.image}" width="50">` : "-"}</td>
 <td>${g.gid}</td>
@@ -93,8 +95,8 @@ db.collection("goats").orderBy("createdAt","desc").onSnapshot(snapshot=>{
 <td>${g.lifeStatus || "-"}</td>
 <td><button onclick="deleteGoat('${doc.id}')">❌</button></td>
 </tr>`;
+    });
   });
-});
 
 // SAVE GOAT
 function saveGoat(){
@@ -103,9 +105,9 @@ function saveGoat(){
     return;
   }
 
-  const data = {
-    gid: gid.value,
-    breed: breed.value,
+  const goatData = {
+    gid: gid.value.trim(),
+    breed: breed.value.trim(),
     gender: gender.value,
     dob: dob.value || "",
     lifeStatus: gender.value === "Female" ? femaleStatus.value : "",
@@ -116,16 +118,18 @@ function saveGoat(){
 
   if(file){
     const ref = storage.ref("goats/" + Date.now() + "_" + file.name);
-    ref.put(file).then(snap=>{
-      snap.ref.getDownloadURL().then(url=>{
-        data.image = url;
-        db.collection("goats").add(data);
-        clearForm();
-      });
-    });
+    ref.put(file)
+      .then(snap => snap.ref.getDownloadURL())
+      .then(url => {
+        goatData.image = url;
+        return db.collection("goats").add(goatData);
+      })
+      .then(clearForm)
+      .catch(err => alert("Upload error: " + err.message));
   } else {
-    db.collection("goats").add(data);
-    clearForm();
+    db.collection("goats").add(goatData)
+      .then(clearForm)
+      .catch(err => alert("Save error: " + err.message));
   }
 }
 
@@ -141,8 +145,8 @@ function clearForm(){
   gender.value = "";
   dob.value = "";
   femaleStatus.value = "";
-  gimage.value = "";
   femaleStatus.style.display = "none";
+  gimage.value = "";
 }
 </script>
 
