@@ -1,38 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Dashboard </title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>📊 Goat Farm Dashboard</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  font-family:"Segoe UI",Arial;
+  background:linear-gradient(135deg,#fdfbfb,#ebedee);
+  margin:0;
+  padding:16px;
+}
+h2{
+  color:#2c5364;
+  margin-bottom:16px;
+}
+
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+}
+
+/* ===== CARD ===== */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 25px rgba(0,0,0,.08);
+  text-align:center;
+}
+.card h3{
+  margin:0;
+  font-size:15px;
+  color:#555;
+}
+.card .num{
+  font-size:32px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+/* ===== COLORS ===== */
+.total{border-top:5px solid #2c5364}
+.male{border-top:5px solid #3498db}
+.female{border-top:5px solid #e84393}
+.kid{border-top:5px solid #f1c40f}
+.preg{border-top:5px solid #9b59b6}
+
+/* ===== MOBILE ===== */
+@media(max-width:600px){
+  h2{font-size:18px}
+  .card .num{font-size:26px}
+}
+</style>
 </head>
+
 <body>
 
-<h2>📊 Dashboard</h2>
-<div id="stats"></div>
+<h2>📊 Goat Farm Dashboard</h2>
+
+<div class="grid">
+  <div class="card total">
+    <h3>Total Goats</h3>
+    <div class="num" id="total">0</div>
+  </div>
+
+  <div class="card male">
+    <h3>Male Goats</h3>
+    <div class="num" id="male">0</div>
+  </div>
+
+  <div class="card female">
+    <h3>Female Goats</h3>
+    <div class="num" id="female">0</div>
+  </div>
+
+  <div class="card kid">
+    <h3>Kids</h3>
+    <div class="num" id="kids">0</div>
+  </div>
+
+  <div class="card preg">
+    <h3>Pregnant</h3>
+    <div class="num" id="pregnant">0</div>
+  </div>
+</div>
 
 <script>
-const supabase = supabase.createClient(
+/* ===== SUPABASE CONFIG ===== */
+const db = supabase.createClient(
   "https://jrrorjoxlwqanebnchui.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-async function load(){
-  const {data}=await supabase.from("goats").select("*");
-  let m=0,f=0,p=0,k=0;
+/* ===== LOAD DASHBOARD DATA ===== */
+async function loadDashboard(){
+  const { data, error } = await db.from("goats").select("*");
+
+  if(!data) return;
+
+  let total = data.length;
+  let male = 0, female = 0, kids = 0, pregnant = 0;
+
   data.forEach(g=>{
-    if(g.gender==="Male")m++;
-    if(g.gender==="Female")f++;
-    if(g.life_status==="Pregnant")p++;
-    if(g.life_status==="Kid")k++;
+    if(g.gender==="Male") male++;
+    if(g.gender==="Female") female++;
+    if(g.life_status==="Kid") kids++;
+    if(g.life_status==="Pregnant") pregnant++;
   });
-  stats.innerHTML=`
-Total: ${data.length}<br>
-Male: ${m}<br>
-Female: ${f}<br>
-Pregnant: ${p}<br>
-Kids: ${k}`;
+
+  document.getElementById("total").innerText = total;
+  document.getElementById("male").innerText = male;
+  document.getElementById("female").innerText = female;
+  document.getElementById("kids").innerText = kids;
+  document.getElementById("pregnant").innerText = pregnant;
 }
-load();
+
+/* INIT */
+loadDashboard();
 </script>
 
 </body>
