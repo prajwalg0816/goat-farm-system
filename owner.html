@@ -1,18 +1,239 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Owner Panel</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>👑 Owner Dashboard</title>
+
+<style>
+/* ================= BASE ================= */
+body{
+  font-family:"Segoe UI",Arial;
+  background:linear-gradient(135deg,#fdfbfb,#ebedee);
+  margin:0;
+  padding:16px;
+  animation:pageFade .6s ease;
+}
+@keyframes pageFade{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+h1,h2{
+  color:#2c5364;
+  margin-bottom:12px;
+}
+
+/* Floating goat animation */
+body::before{
+  content:"🐐";
+  position:fixed;
+  top:12px;
+  right:16px;
+  font-size:38px;
+  animation:floatGoat 3s ease-in-out infinite;
+  pointer-events:none;
+  z-index:999;
+}
+@keyframes floatGoat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+
+/* ================= NAV ================= */
+nav{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:20px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+}
+nav a{
+  text-decoration:none;
+  color:#2c5364;
+  font-weight:600;
+  padding:8px 14px;
+  border-radius:20px;
+  transition:.3s;
+}
+nav a:hover{
+  background:#2c5364;
+  color:#fff;
+}
+
+/* ================= GRID ================= */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;
+}
+
+/* ================= CARDS ================= */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 8px 22px rgba(0,0,0,.08);
+  margin-bottom:20px;
+  transition:.3s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 14px 32px rgba(0,0,0,.12);
+}
+.card h3{
+  margin:0;
+  font-size:15px;
+  color:#555;
+}
+.card .num{
+  font-size:30px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+/* ================= COLORS ================= */
+.primary{border-top:5px solid #2c5364}
+.success{border-top:5px solid #1d976c}
+.warning{border-top:5px solid #fbc531}
+.danger{border-top:5px solid #e84118}
+
+/* ================= BUTTONS ================= */
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.2s;
+}
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+.btn-primary{
+  background:#2c5364;
+  color:#fff;
+}
+.btn-success{
+  background:#1d976c;
+  color:#fff;
+}
+.btn-warning{
+  background:#fbc531;
+}
+.btn-danger{
+  background:#e84118;
+  color:#fff;
+}
+
+/* ================= TABLE ================= */
+.table-wrap{
+  overflow-x:auto;
+}
+table{
+  width:100%;
+  min-width:800px;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:14px;
+}
+th{
+  background:#2c5364;
+  color:#fff;
+  padding:10px;
+}
+td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+
+/* ================= INPUTS ================= */
+input,select{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  width:100%;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:700px){
+  nav{
+    justify-content:center;
+  }
+  h1,h2{
+    font-size:18px;
+  }
+  table{
+    font-size:13px;
+  }
+}
+@media(max-width:480px){
+  body{
+    padding:12px;
+  }
+  button{
+    padding:8px 12px;
+    font-size:13px;
+  }
+}
+</style>
 </head>
+
 <body>
 
-<h2>👑 Owner Panel</h2>
+<h1>👑 Owner Dashboard</h1>
 
 <nav>
-  <a href="dashboard.html">Dashboard</a>
-  <a href="goats.html">Goats</a>
-  <a href="finance.html">Finance</a>
+  <a href="dashboard.html">📊 Dashboard</a>
+  <a href="goats.html">🐐 Goats</a>
+  <a href="finance.html">💰 Finance</a>
 </nav>
+
+<!-- QUICK STATS -->
+<div class="grid">
+  <div class="card primary">
+    <h3>Total Goats</h3>
+    <div class="num">Live Data</div>
+  </div>
+
+  <div class="card success">
+    <h3>Total Income</h3>
+    <div class="num">₹ Live</div>
+  </div>
+
+  <div class="card warning">
+    <h3>Total Expense</h3>
+    <div class="num">₹ Live</div>
+  </div>
+
+  <div class="card danger">
+    <h3>Net Profit</h3>
+    <div class="num">₹ Live</div>
+  </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="card">
+  <h2>⚡ Quick Actions</h2>
+  <div class="grid">
+    <button class="btn-success" onclick="location.href='goats.html'">➕ Add Goat</button>
+    <button class="btn-primary" onclick="location.href='finance.html'">➕ Add Income</button>
+    <button class="btn-warning" onclick="location.href='finance.html'">➖ Add Expense</button>
+    <button class="btn-danger" onclick="alert('Logout logic here')">🚪 Logout</button>
+  </div>
+</div>
+
+<!-- RECENT ACTIVITY PLACEHOLDER -->
+<div class="card">
+  <h2>🕒 Recent Activity</h2>
+  <p style="color:#666">
+    This section can later show recently added goats, latest income/expense entries,
+    or alerts (pregnant goats, low profit days, etc.).
+  </p>
+</div>
 
 </body>
 </html>
