@@ -1,72 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Finance - Goat Farm</title>
-<style>
-body{font-family:Arial;background:#f4f6f8;padding:20px}
-table{width:100%;background:#fff;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:8px;text-align:center}
-nav a{margin-right:15px}
-</style>
+<title>Finance</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<nav>
-  <a href="dashboard.html">Dashboard</a>
-  <a href="goats.html">Goats</a>
-  <a href="finance.html">Finance</a>
-</nav>
-
-<h2>Finance</h2>
-
-<select id="fType">
-  <option value="income">Income</option>
-  <option value="expense">Expense</option>
-</select>
-<input id="fCategory" placeholder="Category">
-<input id="fAmount" type="number" placeholder="Amount">
-<button onclick="saveFinance()">Save</button>
-
-<table>
-<thead>
-<tr><th>Type</th><th>Category</th><th>Amount</th><th>❌</th></tr>
-</thead>
-<tbody id="financeTable"></tbody>
-</table>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
-  authDomain:"goatfarmmanagement-d7b89.firebaseapp.com",
-  projectId:"goatfarmmanagement-d7b89"
-});
-
-const db=firebase.firestore();
-
-db.collection("finance").onSnapshot(s=>{
-  financeTable.innerHTML="";
-  s.forEach(d=>{
-    const f=d.data();
-    financeTable.innerHTML+=`
-<tr>
-<td>${f.type}</td><td>${f.category}</td><td>₹${f.amount}</td>
-<td><button onclick="db.collection('finance').doc('${d.id}').delete()">❌</button></td>
-</tr>`;
-  });
-});
-
-function saveFinance(){
-  db.collection("finance").add({
-    type:fType.value,
-    category:fCategory.value,
-    amount:Number(fAmount.value)
-  });
-}
-</script>
+<h2>💰 Finance</h2>
+<p>Next step</p>
 
 </body>
 </html>
