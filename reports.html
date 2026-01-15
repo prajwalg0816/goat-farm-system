@@ -86,7 +86,7 @@ button{
 .table-wrap{overflow-x:auto}
 table{
   width:100%;
-  min-width:900px;
+  min-width:1100px;
   border-collapse:collapse;
 }
 th{
@@ -100,11 +100,25 @@ td{
   text-align:center;
 }
 
+/* GOAT IMAGE */
+.goat-img{
+  width:80px;
+  height:80px;
+  object-fit:cover;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
 /* PRINT */
 @media print{
   nav,.no-print,body::before{display:none}
   body{background:#fff}
   .card{box-shadow:none}
+  table{min-width:100%}
+  .goat-img{
+    width:80px;
+    height:80px;
+  }
 }
 </style>
 </head>
@@ -145,6 +159,7 @@ td{
     <table>
       <thead>
         <tr>
+          <th>Image</th>
           <th>ID</th>
           <th>Breed</th>
           <th>Gender</th>
@@ -187,19 +202,17 @@ td{
 </div>
 
 <script>
-/* ================= SUPABASE ================= */
 const db = supabase.createClient(
   "https://jrrorjoxlwqanebnchui.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-/* ================= DISABLE FUTURE DATES ================= */
-const today = new Date().toISOString().split("T")[0];
+/* DISABLE FUTURE DATES */
+const today=new Date().toISOString().split("T")[0];
 ["bornFrom","bornTo","fromDate","toDate"].forEach(id=>{
-  document.getElementById(id).setAttribute("max", today);
+  document.getElementById(id).setAttribute("max",today);
 });
 
-/* AGE */
 function ageMonths(dob){
   if(!dob) return 0;
   const d=new Date(dob+"T00:00:00");
@@ -207,17 +220,12 @@ function ageMonths(dob){
   return (t.getFullYear()-d.getFullYear())*12+(t.getMonth()-d.getMonth());
 }
 
-/* GOATS */
 async function loadGoats(){
   const filter=goatFilter.value;
   const bf=bornFrom.value||"1900-01-01";
   const bt=bornTo.value||today;
 
-  const { data } = await db
-    .from("goats")
-    .select("*")
-    .gte("dob",bf)
-    .lte("dob",bt);
+  const { data } = await db.from("goats").select("*").gte("dob",bf).lte("dob",bt);
 
   goatTable.innerHTML="";
   data.forEach(g=>{
@@ -234,6 +242,7 @@ async function loadGoats(){
     if(show){
       goatTable.innerHTML+=`
 <tr>
+  <td>${g.image ? `<img src="${g.image}" class="goat-img">` : "-"}</td>
   <td>${g.goat_id}</td>
   <td>${g.breed}</td>
   <td>${g.gender}</td>
@@ -246,13 +255,11 @@ async function loadGoats(){
   });
 }
 
-/* FINANCE */
 async function loadFinance(){
   const from=fromDate.value||"1900-01-01";
   const to=toDate.value||today;
 
-  const { data } = await db
-    .from("finance")
+  const { data } = await db.from("finance")
     .select("*")
     .gte("entry_date",from)
     .lte("entry_date",to)
@@ -271,7 +278,6 @@ async function loadFinance(){
   });
 }
 
-/* PDF */
 function printGoats(){
   financeReport.style.display="none";
   window.print();
@@ -283,7 +289,6 @@ function printFinance(){
   goatReport.style.display="block";
 }
 
-/* INIT */
 loadGoats();
 loadFinance();
 </script>
