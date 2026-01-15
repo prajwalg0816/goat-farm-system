@@ -1,5 +1,3 @@
-// firebase.js (LOAD ONCE)
-
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCOSeK0RonTva_lazfZV_H22sFAzd685iY",
@@ -9,5 +7,5 @@ if (!firebase.apps.length) {
   });
 }
 
-var db = firebase.firestore();
-var storage = firebase.storage();
+window.db = firebase.firestore();
+window.storage = firebase.storage();
