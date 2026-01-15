@@ -21,7 +21,7 @@ body{
 }
 h2{color:#2c5364}
 
-/* Floating goat */
+/* Floating goat animation */
 body::before{
   content:"🐐";
   position:fixed;
@@ -109,18 +109,6 @@ tr.row-highlight{
 td.gender-male::before{content:"🐐♂️ "}
 td.gender-female::before{content:"🐐♀️ "}
 
-/* ================= DARK MODE ================= */
-@media (prefers-color-scheme: dark){
-  body{background:#121212;color:#e0e0e0}
-  .card,table{background:#1e1e1e}
-  th{background:#000}
-  input,select{background:#2a2a2a;color:#fff;border:1px solid #444}
-}
-body.dark{background:#121212;color:#e0e0e0}
-body.dark .card,
-body.dark table{background:#1e1e1e}
-body.dark th{background:#000}
-
 /* ================= MOBILE ================= */
 @media(max-width:600px){
   h2{font-size:18px}
@@ -131,9 +119,7 @@ body.dark th{background:#000}
 
 <body>
 
-<h2 ondblclick="document.body.classList.toggle('dark')">
-  🐐 Goat Management
-</h2>
+<h2>🐐 Goat Management</h2>
 
 <div class="card">
   <div class="form-grid">
