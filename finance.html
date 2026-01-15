@@ -1,13 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Finance</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>💰 Finance Management</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  font-family:"Segoe UI",Arial;
+  background:linear-gradient(135deg,#fdfbfb,#ebedee);
+  margin:0;
+  padding:16px;
+}
+h2{color:#2c5364}
+
+/* CARD */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  margin-bottom:20px;
+}
+
+/* FORM */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px;
+}
+input,select{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.save{background:#1d976c;color:#fff}
+.edit{background:#fbc531}
+.delete{background:#e84118;color:#fff}
+
+/* SUMMARY */
+.summary{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+}
+.sum-box{
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  text-align:center;
+}
+.sum-box h3{margin:0;color:#555}
+.sum-box .num{
+  font-size:26px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{
+  width:100%;
+  min-width:700px;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:14px;
+}
+th{
+  background:#2c5364;
+  color:#fff;
+  padding:10px;
+}
+td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+  h2{font-size:18px}
+  table{font-size:13px}
+}
+</style>
 </head>
+
 <body>
 
-<h2>💰 Finance</h2>
-<p>Next step</p>
+<h2>💰 Finance Management</h2>
+
+<!-- SUMMARY -->
+<div class="summary">
+  <div class="sum-box">
+    <h3>Total Income</h3>
+    <div class="num" id="income">₹0</div>
+  </div>
+  <div class="sum-box">
+    <h3>Total Expense</h3>
+    <div class="num" id="expense">₹0</div>
+  </div>
+  <div class="sum-box">
+    <h3>Net Profit</h3>
+    <div class="num" id="profit">₹0</div>
+  </div>
+</div>
+
+<br>
+
+<!-- FORM -->
+<div class="card">
+  <div class="form-grid">
+    <select id="type">
+      <option value="">Type</option>
+      <option>Income</option>
+      <option>Expense</option>
+    </select>
+
+    <input id="category" placeholder="Category (Milk, Feed, Vet)">
+    <input type="number" id="amount" placeholder="Amount">
+    <input type="date" id="entry_date">
+    <input id="note" placeholder="Note (optional)">
+  </div>
+  <br>
+  <button class="save" onclick="saveFinance()">Save / Update</button>
+</div>
+
+<!-- TABLE -->
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Type</th>
+  <th>Category</th>
+  <th>Amount</th>
+  <th>Note</th>
+  <th>Edit</th>
+  <th>Delete</th>
+</tr>
+</thead>
+<tbody id="financeTable"></tbody>
+</table>
+</div>
+
+<script>
+/* ===== SUPABASE ===== */
+const db = supabase.createClient(
+  "https://jrrorjoxlwqanebnchui.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
+);
+
+entry_date.value = new Date().toISOString().split("T")[0];
+let editId = null;
+
+/* ===== LOAD ===== */
+async function loadFinance(){
+  const { data } = await db.from("finance").select("*").order("entry_date",{ascending:false});
+  financeTable.innerHTML="";
+
+  let inc=0, exp=0;
+
+  data.forEach(f=>{
+    if(f.type==="Income") inc += Number(f.amount);
+    if(f.type==="Expense") exp += Number(f.amount);
+
+    financeTable.innerHTML += `
+<tr>
+  <td>${f.entry_date}</td>
+  <td>${f.type}</td>
+  <td>${f.category}</td>
+  <td>₹${f.amount}</td>
+  <td>${f.note||"-"}</td>
+  <td><button class="edit" onclick='editFinance(${JSON.stringify(f)})'>✏️</button></td>
+  <td><button class="delete" onclick="delFinance('${f.id}')">❌</button></td>
+</tr>`;
+  });
+
+  document.getElementById("income").innerText = "₹" + inc;
+  document.getElementById("expense").innerText = "₹" + exp;
+  document.getElementById("profit").innerText = "₹" + (inc-exp);
+}
+
+/* ===== SAVE ===== */
+async function saveFinance(){
+  const payload={
+    type:type.value,
+    category:category.value,
+    amount:amount.value,
+    entry_date:entry_date.value,
+    note:note.value
+  };
+
+  if(editId){
+    await db.from("finance").update(payload).eq("id",editId);
+    editId=null;
+  }else{
+    await db.from("finance").insert([payload]);
+  }
+
+  clearForm();
+  loadFinance();
+}
+
+/* ===== EDIT ===== */
+function editFinance(f){
+  editId=f.id;
+  type.value=f.type;
+  category.value=f.category;
+  amount.value=f.amount;
+  entry_date.value=f.entry_date;
+  note.value=f.note||"";
+}
+
+/* ===== DELETE ===== */
+async function delFinance(id){
+  if(confirm("Delete record?")){
+    await db.from("finance").delete().eq("id",id);
+    loadFinance();
+  }
+}
+
+/* ===== CLEAR ===== */
+function clearForm(){
+  type.value="";
+  category.value="";
+  amount.value="";
+  entry_date.value=new Date().toISOString().split("T")[0];
+  note.value="";
+}
+
+/* INIT */
+loadFinance();
+</script>
 
 </body>
 </html>
