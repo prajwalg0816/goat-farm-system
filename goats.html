@@ -2,52 +2,119 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Goat Management</title>
-<link rel="stylesheet" href="style.css">
+<title>🐐 Goat Management</title>
 
-<!-- Supabase SDK -->
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ===== LUXURY THEME ===== */
+body{
+  font-family: "Segoe UI", Arial;
+  background: linear-gradient(135deg,#fdfbfb,#ebedee);
+  padding:30px;
+}
+h2{
+  color:#2c5364;
+}
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:25px;
+  box-shadow:0 10px 30px rgba(0,0,0,.1);
+  margin-bottom:30px;
+}
+input,select{
+  padding:10px;
+  margin:6px 0;
+  width:100%;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+.save{
+  background:linear-gradient(135deg,#1d976c,#93f9b9);
+  color:#fff;
+}
+.edit{
+  background:#fbc531;
+  color:#000;
+}
+.delete{
+  background:#e84118;
+  color:#fff;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
+}
+th{
+  background:#2c5364;
+  color:#fff;
+  padding:12px;
+}
+td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+img{
+  border-radius:10px;
+}
+#msg{
+  font-weight:bold;
+  margin-top:10px;
+}
+</style>
 </head>
 
 <body>
 
 <h2>🐐 Goat Management</h2>
 
-<input id="goat_id" placeholder="Goat ID"><br>
-<input id="breed" placeholder="Breed"><br>
+<div class="card">
+  <input id="goat_id" placeholder="Goat ID">
+  <input id="breed" placeholder="Breed">
 
-<select id="gender" onchange="toggleFemale()">
-  <option value="">Select Gender</option>
-  <option value="Male">Male</option>
-  <option value="Female">Female</option>
-</select><br>
+  <select id="gender" onchange="toggleFemale()">
+    <option value="">Gender</option>
+    <option>Male</option>
+    <option>Female</option>
+  </select>
 
-<label>DOB</label><br>
-<input type="date" id="dob"><br>
+  <label>Date of Birth</label>
+  <input type="date" id="dob">
 
-<select id="status">
-  <option value="Live">Live</option>
-  <option value="Dead">Dead</option>
-  <option value="Sold">Sold</option>
-</select><br>
+  <select id="status">
+    <option value="Live">Live</option>
+    <option value="Dead">Dead</option>
+    <option value="Sold">Sold</option>
+  </select>
 
-<select id="life_status" style="display:none">
-  <option value="">Female Life Status</option>
-  <option value="Kid">Kid</option>
-  <option value="Pregnant">Pregnant</option>
-  <option value="Delivered">Delivered</option>
-</select><br>
+  <select id="life_status" style="display:none">
+    <option value="">Female Life Status</option>
+    <option>Kid</option>
+    <option>Pregnant</option>
+    <option>Delivered</option>
+  </select>
 
-<input type="file" id="image" accept="image/*"><br><br>
+  <input type="file" id="image">
 
-<button onclick="addGoat()">Save Goat</button>
+  <button class="save" onclick="saveGoat()">Save / Update Goat</button>
+  <p id="msg"></p>
+</div>
 
-<p id="msg"></p>
-
-<hr>
-
-<h3>📋 Goat List</h3>
-
+<div class="card">
 <table>
 <thead>
 <tr>
@@ -55,151 +122,125 @@
   <th>ID</th>
   <th>Breed</th>
   <th>Gender</th>
+  <th>DOB</th>
   <th>Age</th>
   <th>Status</th>
   <th>Life</th>
+  <th>Edit</th>
   <th>Delete</th>
 </tr>
 </thead>
 <tbody id="goatTable"></tbody>
 </table>
+</div>
 
 <script>
-/* ================= SUPABASE CONFIG ================= */
-const SUPABASE_URL = "https://jrrorjoxlwqanebnchui.supabase.co";
-const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k";
+/* ===== SUPABASE CONFIG ===== */
+const db = supabase.createClient(
+  "https://jrrorjoxlwqanebnchui.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
+);
 
-/* ✅ IMPORTANT: use db, NOT supabase */
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let editId = null;
 
-/* ================= FUNCTIONS ================= */
-
+/* ===== HELPERS ===== */
 function toggleFemale(){
-  document.getElementById("life_status").style.display =
-    document.getElementById("gender").value === "Female"
-    ? "block" : "none";
+  life_status.style.display =
+    gender.value === "Female" ? "block" : "none";
 }
 
-function calculateAge(dob){
-  if(!dob) return null;
-  const b = new Date(dob);
+function calcAge(d){
+  if(!d) return "-";
+  const b = new Date(d);
   const t = new Date();
-  let age = t.getFullYear() - b.getFullYear();
-  if (
-    t.getMonth() < b.getMonth() ||
-    (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())
-  ) age--;
-  return age;
+  let a = t.getFullYear() - b.getFullYear();
+  if(t.getMonth()<b.getMonth() || 
+    (t.getMonth()==b.getMonth() && t.getDate()<b.getDate())) a--;
+  return a;
 }
 
-/* ================= LOAD GOATS ================= */
+/* ===== LOAD GOATS ===== */
 async function loadGoats(){
-  const { data, error } = await db
-    .from("goats")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  const table = document.getElementById("goatTable");
-  table.innerHTML = "";
-
-  if(data){
-    data.forEach(g => {
-      table.innerHTML += `
+  const {data} = await db.from("goats").select("*").order("created_at",{ascending:false});
+  goatTable.innerHTML="";
+  data.forEach(g=>{
+    goatTable.innerHTML += `
 <tr>
-  <td>${g.image_url ? `<img src="${g.image_url}" width="50">` : "-"}</td>
-  <td>${g.goat_id}</td>
-  <td>${g.breed}</td>
-  <td>${g.gender}</td>
-  <td>${g.age ?? "-"}</td>
-  <td>${g.status}</td>
-  <td>${g.life_status ?? "-"}</td>
-  <td><button onclick="deleteGoat('${g.id}')">❌</button></td>
+<td>${g.image_url?`<img src="${g.image_url}" width="60">`:"-"}</td>
+<td>${g.goat_id}</td>
+<td>${g.breed}</td>
+<td>${g.gender}</td>
+<td>${g.dob ?? "-"}</td>
+<td>${calcAge(g.dob)}</td>
+<td>${g.status ?? "Live"}</td>
+<td>${g.life_status ?? "-"}</td>
+<td><button class="edit" onclick="editGoat('${g.id}',${JSON.stringify(g).replace(/"/g,'&quot;')})">✏️</button></td>
+<td><button class="delete" onclick="delGoat('${g.id}')">❌</button></td>
 </tr>`;
-    });
-  }
+  });
 }
 
-/* ================= ADD GOAT ================= */
-async function addGoat(){
-  const msg = document.getElementById("msg");
-  msg.style.color = "red";
-  msg.innerText = "";
+/* ===== SAVE / UPDATE ===== */
+async function saveGoat(){
+  let imageUrl=null;
 
-  const goatId = goat_id.value.trim();
-  const breedVal = breed.value.trim();
-  const genderVal = gender.value;
-
-  if(!goatId || !breedVal || !genderVal){
-    msg.innerText = "Goat ID, Breed and Gender required";
-    return;
+  if(image.files[0]){
+    const f=image.files[0];
+    const n=Date.now()+"_"+f.name;
+    await db.storage.from("goat-images").upload(n,f);
+    imageUrl=db.storage.from("goat-images").getPublicUrl(n).data.publicUrl;
   }
 
-  msg.style.color = "green";
-  msg.innerText = "Saving goat...";
+  const payload={
+    goat_id:goat_id.value,
+    breed:breed.value,
+    gender:gender.value,
+    dob:dob.value||null,
+    status:status.value || "Live",
+    life_status:gender.value==="Female"?life_status.value:null
+  };
+  if(imageUrl) payload.image_url=imageUrl;
 
-  let imageUrl = null;
-
-  if(image.files.length > 0){
-    const file = image.files[0];
-    const fileName = Date.now() + "_" + file.name;
-
-    const { error: uploadError } = await db
-      .storage
-      .from("goat-images")
-      .upload(fileName, file);
-
-    if(uploadError){
-      msg.style.color = "red";
-      msg.innerText = "Image upload failed";
-      return;
-    }
-
-    imageUrl = db
-      .storage
-      .from("goat-images")
-      .getPublicUrl(fileName).data.publicUrl;
-  }
-
-  const { error } = await db.from("goats").insert([{
-    goat_id: goatId,
-    breed: breedVal,
-    gender: genderVal,
-    dob: dob.value || null,
-    age: calculateAge(dob.value),
-    status: status.value,
-    life_status: genderVal === "Female" ? life_status.value : null,
-    image_url: imageUrl
-  }]);
-
-  if(error){
-    msg.style.color = "red";
-    msg.innerText = error.message;
+  if(editId){
+    await db.from("goats").update(payload).eq("id",editId);
+    editId=null;
   }else{
-    msg.innerText = "Goat saved successfully ✅";
-    clearForm();
-    loadGoats();
+    await db.from("goats").insert([payload]);
   }
+
+  clearForm();
+  loadGoats();
 }
 
-/* ================= DELETE ================= */
-async function deleteGoat(id){
+/* ===== EDIT ===== */
+function editGoat(id,g){
+  editId=id;
+  goat_id.value=g.goat_id;
+  breed.value=g.breed;
+  gender.value=g.gender;
+  dob.value=g.dob||"";
+  status.value=g.status||"Live";
+  life_status.value=g.life_status||"";
+  toggleFemale();
+}
+
+/* ===== DELETE ===== */
+async function delGoat(id){
   if(confirm("Delete this goat?")){
-    await db.from("goats").delete().eq("id", id);
+    await db.from("goats").delete().eq("id",id);
     loadGoats();
   }
 }
 
-/* ================= CLEAR ================= */
+/* ===== CLEAR ===== */
 function clearForm(){
-  goat_id.value = "";
-  breed.value = "";
-  gender.value = "";
-  dob.value = "";
-  status.value = "Live";
-  life_status.value = "";
-  life_status.style.display = "none";
-  image.value = "";
+  goat_id.value="";
+  breed.value="";
+  gender.value="";
+  dob.value="";
+  status.value="Live";
+  life_status.value="";
+  image.value="";
 }
 
 /* INIT */
