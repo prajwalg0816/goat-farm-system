@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📊 Goat Farm Dashboard</title>
+<title>📊 Dashboard</title>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 /* ================= BASE ================= */
@@ -13,33 +17,72 @@ body{
   background:linear-gradient(135deg,#fdfbfb,#ebedee);
   margin:0;
   padding:16px;
-  animation:pageFade .6s ease;
 }
-@keyframes pageFade{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
-}
-h2{
-  color:#2c5364;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
+h1,h2{color:#2c5364}
 
 /* Floating goat */
-.goat-float{
-  font-size:34px;
+body::before{
+  content:"🐐";
+  position:fixed;
+  top:12px;
+  right:16px;
+  font-size:36px;
   animation:floatGoat 3s ease-in-out infinite;
+  pointer-events:none;
 }
 @keyframes floatGoat{
   0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-8px)}
+  50%{transform:translateY(-10px)}
+}
+
+/* NAV */
+nav{
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+}
+nav a{
+  text-decoration:none;
+  color:#2c5364;
+  font-weight:600;
+  padding:8px 14px;
+  border-radius:20px;
+}
+nav a:hover{background:#2c5364;color:#fff}
+
+/* ================= LOADER ================= */
+.loader{
+  background:#fff;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 8px 22px rgba(0,0,0,.08);
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.shimmer{
+  height:16px;
+  width:160px;
+  background:linear-gradient(90deg,#eee,#ddd,#eee);
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite;
+  border-radius:8px;
+}
+@keyframes shimmer{
+  0%{background-position:200%}
+  100%{background-position:-200%}
 }
 
 /* ================= GRID ================= */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:16px;
 }
 
@@ -49,94 +92,93 @@ h2{
   border-radius:16px;
   padding:18px;
   box-shadow:0 8px 22px rgba(0,0,0,.08);
-  text-align:center;
   transition:.3s;
 }
 .card:hover{
   transform:translateY(-4px);
   box-shadow:0 14px 32px rgba(0,0,0,.12);
 }
-.card h3{
-  margin:0;
-  font-size:14px;
-  color:#555;
-}
-.card .num{
+.num{
   font-size:30px;
   font-weight:bold;
-  margin-top:6px;
 }
 
-/* ================= COLORS ================= */
-.total{border-top:5px solid #2c5364}
-.male{border-top:5px solid #3498db}
-.female{border-top:5px solid #e84393}
-.kid{border-top:5px solid #f1c40f}
-.preg{border-top:5px solid #9b59b6}
-
-.income{border-top:5px solid #1d976c}
-.expense{border-top:5px solid #e84118}
-.profit{border-top:5px solid #2c5364}
+/* ================= BUTTON ================= */
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  background:#2c5364;
+  color:#fff;
+}
 
 /* ================= MOBILE ================= */
 @media(max-width:600px){
-  h2{font-size:18px}
-  .card .num{font-size:24px}
+  h1{font-size:20px}
 }
 </style>
 </head>
 
 <body>
 
-<h2>
-  <span class="goat-float">🐐</span>
-  Goat Farm Dashboard
-</h2>
+<h1>📊 Dashboard</h1>
 
+<nav>
+  <a href="owner.html">👑 Owner</a>
+  <a href="goats.html">🐐 Goats</a>
+  <a href="finance.html">💰 Finance</a>
+  <a href="reports.html">📑 Reports</a>
+</nav>
+
+<!-- LOADING -->
+<div class="loader" id="loader">
+  <div class="shimmer"></div>
+  <span>Fetching live data…</span>
+</div>
+
+<!-- KPI CARDS -->
 <div class="grid">
-
-  <!-- GOATS -->
-  <div class="card total">
+  <div class="card">
     <h3>Total Goats</h3>
-    <div class="num" id="total">0</div>
+    <div class="num" id="goatCount">0</div>
   </div>
-
-  <div class="card male">
-    <h3>Male Goats</h3>
-    <div class="num" id="male">0</div>
-  </div>
-
-  <div class="card female">
-    <h3>Female Goats</h3>
-    <div class="num" id="female">0</div>
-  </div>
-
-  <div class="card kid">
-    <h3>Kids</h3>
-    <div class="num" id="kids">0</div>
-  </div>
-
-  <div class="card preg">
-    <h3>Pregnant</h3>
-    <div class="num" id="pregnant">0</div>
-  </div>
-
-  <!-- FINANCE -->
-  <div class="card income">
+  <div class="card">
     <h3>Total Income</h3>
     <div class="num" id="income">₹0</div>
   </div>
-
-  <div class="card expense">
+  <div class="card">
     <h3>Total Expense</h3>
     <div class="num" id="expense">₹0</div>
   </div>
-
-  <div class="card profit">
+  <div class="card">
     <h3>Net Profit</h3>
     <div class="num" id="profit">₹0</div>
   </div>
+</div>
 
+<br>
+
+<button onclick="loadDashboard()">🔄 Refresh Data</button>
+<p id="updatedAt" style="color:#555"></p>
+
+<br>
+
+<!-- CHARTS -->
+<div class="grid">
+  <div class="card">
+    <h2>🐐 Goat Distribution</h2>
+    <canvas id="goatChart"></canvas>
+  </div>
+  <div class="card">
+    <h2>💰 Income vs Expense</h2>
+    <canvas id="financeChart"></canvas>
+  </div>
+  <div class="card">
+    <h2>📈 Monthly Profit</h2>
+    <canvas id="profitChart"></canvas>
+  </div>
 </div>
 
 <script>
@@ -146,38 +188,83 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
+let goatChartObj, financeChartObj, profitChartObj;
+
 /* ================= LOAD DASHBOARD ================= */
 async function loadDashboard(){
+  loader.style.display="flex";
 
-  /* ---- GOATS ---- */
   const { data: goats } = await db.from("goats").select("*");
+  const { data: finance } = await db.from("finance").select("*");
 
-  let male=0, female=0, kids=0, pregnant=0;
+  loader.style.display="none";
+
+  // KPI
+  animate(goatCount, goats.length);
+  let inc=0, exp=0, months={};
+  finance.forEach(f=>{
+    const m=f.entry_date.substring(0,7);
+    months[m]=months[m]||{i:0,e:0};
+    if(f.type==="Income"){inc+=+f.amount;months[m].i+=+f.amount}
+    if(f.type==="Expense"){exp+=+f.amount;months[m].e+=+f.amount}
+  });
+
+  animate(income, inc, "₹");
+  animate(expense, exp, "₹");
+  animate(profit, inc-exp, "₹");
+
+  updatedAt.innerText="Last updated: "+new Date().toLocaleString();
+
+  // Goat chart
+  let male=0,female=0;
   goats.forEach(g=>{
     if(g.gender==="Male") male++;
     if(g.gender==="Female") female++;
-    if(g.life_status==="Kid") kids++;
-    if(g.life_status==="Pregnant") pregnant++;
   });
 
-  document.getElementById("total").innerText = goats.length;
-  document.getElementById("male").innerText = male;
-  document.getElementById("female").innerText = female;
-  document.getElementById("kids").innerText = kids;
-  document.getElementById("pregnant").innerText = pregnant;
-
-  /* ---- FINANCE ---- */
-  const { data: finance } = await db.from("finance").select("*");
-
-  let inc=0, exp=0;
-  finance.forEach(f=>{
-    if(f.type==="Income") inc+=Number(f.amount);
-    if(f.type==="Expense") exp+=Number(f.amount);
+  if(goatChartObj) goatChartObj.destroy();
+  goatChartObj=new Chart(goatChart,{
+    type:"pie",
+    data:{
+      labels:["Male","Female"],
+      datasets:[{data:[male,female],backgroundColor:["#3498db","#e84393"]}]
+    }
   });
 
-  document.getElementById("income").innerText = "₹"+inc;
-  document.getElementById("expense").innerText = "₹"+exp;
-  document.getElementById("profit").innerText = "₹"+(inc-exp);
+  // Finance chart
+  if(financeChartObj) financeChartObj.destroy();
+  financeChartObj=new Chart(financeChart,{
+    type:"bar",
+    data:{
+      labels:Object.keys(months),
+      datasets:[
+        {label:"Income",data:Object.values(months).map(v=>v.i),backgroundColor:"#1d976c"},
+        {label:"Expense",data:Object.values(months).map(v=>v.e),backgroundColor:"#e84118"}
+      ]
+    }
+  });
+
+  // Profit chart
+  if(profitChartObj) profitChartObj.destroy();
+  profitChartObj=new Chart(profitChart,{
+    type:"line",
+    data:{
+      labels:Object.keys(months),
+      datasets:[
+        {label:"Profit",data:Object.values(months).map(v=>v.i-v.e),borderColor:"#2c5364",fill:false}
+      ]
+    }
+  });
+}
+
+/* ================= COUNT ANIMATION ================= */
+function animate(el,val,prefix=""){
+  let c=0,step=Math.max(1,val/30);
+  const t=setInterval(()=>{
+    c+=step;
+    if(c>=val){c=val;clearInterval(t)}
+    el.innerText=prefix+Math.floor(c);
+  },20);
 }
 
 /* INIT */
