@@ -118,6 +118,184 @@ button{
 @media(max-width:600px){
   h1{font-size:20px}
 }
+  /* ================= COLOR THEME ENHANCEMENTS ================= */
+
+/* Section headings */
+h1::after{
+  content:" 🐐📊";
+}
+h2::after{
+  content:" ✨";
+}
+
+/* KPI Cards Coloring */
+.card:nth-child(1){border-top:4px solid #27ae60;}
+.card:nth-child(2){border-top:4px solid #3498db;}
+.card:nth-child(3){border-top:4px solid #e67e22;}
+.card:nth-child(4){border-top:4px solid #9b59b6;}
+
+/* Numbers gradient */
+.num{
+  background:linear-gradient(45deg,#2c5364,#0f2027);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* Goat detail cards subtle color */
+#adultMale{color:#2980b9;}
+#childMale{color:#74b9ff;}
+#adultFemale{color:#d63031;}
+#childFemale{color:#fd79a8;}
+#pregnantGoats{color:#8e44ad;}
+#born30{color:#27ae60;}
+#sold30{color:#f39c12;}
+#dead30{color:#c0392b;}
+
+/* Alerts emoji emphasis */
+.alert-danger::before{
+  content:"🚨 ";
+  font-size:18px;
+}
+.alert-warning::before{
+  content:"⚠️ ";
+  font-size:18px;
+}
+
+/* Card hover glow */
+.card:hover{
+  box-shadow:
+    0 14px 32px rgba(44,83,100,.25),
+    inset 0 0 0 1px rgba(44,83,100,.1);
+}
+
+/* Loader emoji */
+.loader span::after{
+  content:" 🐐";
+}
+
+/* Buttons emoji */
+button::after{
+  content:" 🔄";
+}
+
+/* Charts cards decoration */
+canvas{
+  margin-top:8px;
+}
+
+/* Nav emojis enhancement */
+nav a[href*="owner"]::before{content:"👑 "; }
+nav a[href*="goats"]::before{content:"🐐 "; }
+nav a[href*="finance"]::before{content:"💰 "; }
+nav a[href*="reports"]::before{content:"📑 "; }
+
+/* Mobile polish */
+@media(max-width:600px){
+  .card{
+    padding:14px;
+  }
+  .num{
+    font-size:24px;
+  }
+}
+
+  /* =========================================================
+   1️⃣ ANIMATED COUNT PULSE
+========================================================= */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.num {
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+/* =========================================================
+   2️⃣ CHART HOVER GLOW
+========================================================= */
+canvas {
+  transition: box-shadow .4s ease, transform .4s ease;
+  border-radius: 12px;
+}
+
+.card:hover canvas {
+  box-shadow: 0 0 28px rgba(44,83,100,0.45);
+  transform: scale(1.02);
+}
+
+/* =========================================================
+   3️⃣ PAGE TRANSITION ANIMATION
+========================================================= */
+body {
+  animation: pageFade 0.8s ease forwards;
+}
+
+@keyframes pageFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth nav page change feel */
+nav a {
+  transition: background .3s ease, color .3s ease, transform .2s ease;
+}
+
+nav a:hover {
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   4️⃣ GLASSMORPHISM CARDS
+========================================================= */
+.card {
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.35);
+}
+
+/* Stronger glass on hover */
+.card:hover {
+  background: rgba(255,255,255,0.85);
+}
+
+/* =========================================================
+   EXTRA PREMIUM POLISH (SAFE)
+========================================================= */
+
+/* KPI number glow */
+.num {
+  text-shadow: 0 0 8px rgba(44,83,100,0.25);
+}
+
+/* Loader polish */
+.loader {
+  backdrop-filter: blur(6px);
+}
+
+/* Alert glow */
+.alert-danger {
+  box-shadow: 0 0 18px rgba(232,65,24,0.35);
+}
+.alert-warning {
+  box-shadow: 0 0 18px rgba(251,197,49,0.35);
+}
+
+/* Mobile smoothness */
+@media(max-width:600px){
+  .card {
+    animation: none; /* reduce load on mobile */
+  }
+}
+
 </style>
 </head>
 
