@@ -72,6 +72,13 @@ img{
 <input type="date" id="dob">
 <br>
 
+<select id="status">
+  <option value="Live">Live</option>
+  <option value="Dead">Dead</option>
+  <option value="Sold">Sold</option>
+</select>
+<br>
+
 <select id="femaleStatus" style="display:none">
   <option value="">Female Life Status</option>
   <option value="Kid">Kid</option>
@@ -98,6 +105,7 @@ img{
   <th>Breed</th>
   <th>Gender</th>
   <th>DOB</th>
+  <th>Status</th>
   <th>Life Status</th>
   <th>Delete</th>
 </tr>
@@ -105,12 +113,12 @@ img{
 <tbody id="goatTable"></tbody>
 </table>
 
-<!-- 🔹 Firebase SDKs -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-<!-- 🔹 Single Firebase Initialization -->
+<!-- Firebase init -->
 <script src="firebase.js"></script>
 
 <script>
@@ -119,29 +127,28 @@ function toggleFemaleStatus(){
     gender.value === "Female" ? "block" : "none";
 }
 
-/* ================= LOAD GOATS ================= */
-db.collection("goats")
-  .orderBy("createdAt","desc")
-  .onSnapshot(snapshot=>{
-    goatTable.innerHTML = "";
-    snapshot.forEach(doc=>{
-      const g = doc.data();
-      goatTable.innerHTML += `
+/* ===== LOAD GOATS ===== */
+db.collection("goats").onSnapshot(snapshot=>{
+  goatTable.innerHTML = "";
+  snapshot.forEach(doc=>{
+    const g = doc.data();
+    goatTable.innerHTML += `
 <tr>
   <td>${g.image ? `<img src="${g.image}" width="60">` : "-"}</td>
   <td>${g.gid}</td>
   <td>${g.breed}</td>
   <td>${g.gender}</td>
   <td>${g.dob || "-"}</td>
+  <td>${g.status}</td>
   <td>${g.lifeStatus || "-"}</td>
   <td>
     <button onclick="deleteGoat('${doc.id}')">❌</button>
   </td>
 </tr>`;
-    });
   });
+});
 
-/* ================= SAVE GOAT ================= */
+/* ===== SAVE GOAT ===== */
 function saveGoat(){
   const msg = document.getElementById("statusMsg");
   msg.style.color = "red";
@@ -160,6 +167,7 @@ function saveGoat(){
     breed: breed.value.trim(),
     gender: gender.value,
     dob: dob.value || "",
+    status: status.value || "Live",
     lifeStatus: gender.value === "Female" ? femaleStatus.value : "",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -195,19 +203,20 @@ function saveGoat(){
   }
 }
 
-/* ================= DELETE GOAT ================= */
+/* ===== DELETE GOAT ===== */
 function deleteGoat(id){
   if(confirm("Delete this goat?")){
     db.collection("goats").doc(id).delete();
   }
 }
 
-/* ================= CLEAR FORM ================= */
+/* ===== CLEAR FORM ===== */
 function clearForm(){
   gid.value = "";
   breed.value = "";
   gender.value = "";
   dob.value = "";
+  status.value = "Live";
   femaleStatus.value = "";
   femaleStatus.style.display = "none";
   gimage.value = "";
