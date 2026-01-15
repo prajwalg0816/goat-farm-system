@@ -11,7 +11,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* ================= BASE ================= */
 body{
   font-family:"Segoe UI",Arial;
   background:linear-gradient(135deg,#fdfbfb,#ebedee);
@@ -55,7 +54,7 @@ nav a{
 }
 nav a:hover{background:#2c5364;color:#fff}
 
-/* ================= LOADER ================= */
+/* Loader */
 .loader{
   background:#fff;
   border-radius:16px;
@@ -79,14 +78,12 @@ nav a:hover{background:#2c5364;color:#fff}
   100%{background-position:-200%}
 }
 
-/* ================= GRID ================= */
+/* Grid + cards */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:16px;
 }
-
-/* ================= CARD ================= */
 .card{
   background:#fff;
   border-radius:16px;
@@ -99,11 +96,15 @@ nav a:hover{background:#2c5364;color:#fff}
   box-shadow:0 14px 32px rgba(0,0,0,.12);
 }
 .num{
-  font-size:30px;
+  font-size:28px;
   font-weight:bold;
 }
 
-/* ================= BUTTON ================= */
+/* Alerts */
+.alert-danger{background:#ffecec}
+.alert-warning{background:#fff8e1}
+
+/* Button */
 button{
   padding:10px 14px;
   border:none;
@@ -114,7 +115,6 @@ button{
   color:#fff;
 }
 
-/* ================= MOBILE ================= */
 @media(max-width:600px){
   h1{font-size:20px}
 }
@@ -132,132 +132,69 @@ button{
   <a href="reports.html">📑 Reports</a>
 </nav>
 
-<!-- LOADING -->
 <div class="loader" id="loader">
   <div class="shimmer"></div>
   <span>Fetching live data…</span>
 </div>
 
-<!-- KPI CARDS -->
+<!-- BASIC KPI -->
 <div class="grid">
-  <div class="card">
-    <h3>Total Goats</h3>
-    <div class="num" id="goatCount">0</div>
-  </div>
-  <div class="card">
-    <h3>Total Income</h3>
-    <div class="num" id="income">₹0</div>
-  </div>
-  <div class="card">
-    <h3>Total Expense</h3>
-    <div class="num" id="expense">₹0</div>
-  </div>
-  <div class="card">
-    <h3>Net Profit</h3>
-    <div class="num" id="profit">₹0</div>
-  </div>
+  <div class="card"><h3>Total Goats</h3><div class="num" id="goatCount">0</div></div>
+  <div class="card"><h3>Total Income</h3><div class="num" id="income">₹0</div></div>
+  <div class="card"><h3>Total Expense</h3><div class="num" id="expense">₹0</div></div>
+  <div class="card"><h3>Net Profit</h3><div class="num" id="profit">₹0</div></div>
 </div>
 
 <br>
 
-<button onclick="loadDashboard()">🔄 Refresh Data</button>
-<p id="updatedAt" style="color:#555"></p>
+<!-- GOAT DETAILS -->
+<div class="grid">
+  <div class="card"><h3>Adult Males</h3><div class="num" id="adultMale">0</div></div>
+  <div class="card"><h3>Child Males</h3><div class="num" id="childMale">0</div></div>
+  <div class="card"><h3>Adult Females</h3><div class="num" id="adultFemale">0</div></div>
+  <div class="card"><h3>Child Females</h3><div class="num" id="childFemale">0</div></div>
+  <div class="card"><h3>Pregnant Goats</h3><div class="num" id="pregnantGoats">0</div></div>
+</div>
+
+<br>
+
+<div class="grid">
+  <div class="card"><h3>Born (30 days)</h3><div class="num" id="born30">0</div></div>
+  <div class="card"><h3>Sold (30 days)</h3><div class="num" id="sold30">0</div></div>
+  <div class="card"><h3>Dead (30 days)</h3><div class="num" id="dead30">0</div></div>
+</div>
+
+<br>
+
+<div class="grid" id="alerts"></div>
 
 <br>
 
 <!-- CHARTS -->
 <div class="grid">
-  <div class="card">
-    <h2>🐐 Goat Distribution</h2>
-    <canvas id="goatChart"></canvas>
-  </div>
-  <div class="card">
-    <h2>💰 Income vs Expense</h2>
-    <canvas id="financeChart"></canvas>
-  </div>
-  <div class="card">
-    <h2>📈 Monthly Profit</h2>
-    <canvas id="profitChart"></canvas>
-  </div>
+  <div class="card"><canvas id="genderChart"></canvas></div>
+  <div class="card"><canvas id="ageChart"></canvas></div>
+  <div class="card"><canvas id="activityChart"></canvas></div>
 </div>
 
+<br>
+
+<button onclick="loadDashboard()">🔄 Refresh Data</button>
+<p id="updatedAt"></p>
+
 <script>
-/* ================= SUPABASE ================= */
 const db = supabase.createClient(
   "https://jrrorjoxlwqanebnchui.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-let goatChartObj, financeChartObj, profitChartObj;
-
-/* ================= LOAD DASHBOARD ================= */
-async function loadDashboard(){
-  loader.style.display="flex";
-
-  const { data: goats } = await db.from("goats").select("*");
-  const { data: finance } = await db.from("finance").select("*");
-
-  loader.style.display="none";
-
-  // KPI
-  animate(goatCount, goats.length);
-  let inc=0, exp=0, months={};
-  finance.forEach(f=>{
-    const m=f.entry_date.substring(0,7);
-    months[m]=months[m]||{i:0,e:0};
-    if(f.type==="Income"){inc+=+f.amount;months[m].i+=+f.amount}
-    if(f.type==="Expense"){exp+=+f.amount;months[m].e+=+f.amount}
-  });
-
-  animate(income, inc, "₹");
-  animate(expense, exp, "₹");
-  animate(profit, inc-exp, "₹");
-
-  updatedAt.innerText="Last updated: "+new Date().toLocaleString();
-
-  // Goat chart
-  let male=0,female=0;
-  goats.forEach(g=>{
-    if(g.gender==="Male") male++;
-    if(g.gender==="Female") female++;
-  });
-
-  if(goatChartObj) goatChartObj.destroy();
-  goatChartObj=new Chart(goatChart,{
-    type:"pie",
-    data:{
-      labels:["Male","Female"],
-      datasets:[{data:[male,female],backgroundColor:["#3498db","#e84393"]}]
-    }
-  });
-
-  // Finance chart
-  if(financeChartObj) financeChartObj.destroy();
-  financeChartObj=new Chart(financeChart,{
-    type:"bar",
-    data:{
-      labels:Object.keys(months),
-      datasets:[
-        {label:"Income",data:Object.values(months).map(v=>v.i),backgroundColor:"#1d976c"},
-        {label:"Expense",data:Object.values(months).map(v=>v.e),backgroundColor:"#e84118"}
-      ]
-    }
-  });
-
-  // Profit chart
-  if(profitChartObj) profitChartObj.destroy();
-  profitChartObj=new Chart(profitChart,{
-    type:"line",
-    data:{
-      labels:Object.keys(months),
-      datasets:[
-        {label:"Profit",data:Object.values(months).map(v=>v.i-v.e),borderColor:"#2c5364",fill:false}
-      ]
-    }
-  });
+function ageMonths(dob){
+  if(!dob) return 0;
+  const d=new Date(dob+"T00:00:00");
+  const t=new Date();
+  return (t.getFullYear()-d.getFullYear())*12+(t.getMonth()-d.getMonth());
 }
 
-/* ================= COUNT ANIMATION ================= */
 function animate(el,val,prefix=""){
   let c=0,step=Math.max(1,val/30);
   const t=setInterval(()=>{
@@ -267,7 +204,82 @@ function animate(el,val,prefix=""){
   },20);
 }
 
-/* INIT */
+async function loadDashboard(){
+  loader.style.display="flex";
+
+  const { data: goats } = await db.from("goats").select("*");
+  const { data: finance } = await db.from("finance").select("*");
+
+  loader.style.display="none";
+
+  animate(goatCount, goats.length);
+
+  let inc=0,exp=0;
+  finance.forEach(f=>{
+    if(f.type==="Income") inc+=+f.amount;
+    if(f.type==="Expense") exp+=+f.amount;
+  });
+  animate(income,inc,"₹");
+  animate(expense,exp,"₹");
+  animate(profit,inc-exp,"₹");
+
+  let adultM=0,childM=0,adultF=0,childF=0,preg=0;
+  let born=0,sold=0,dead=0;
+
+  const now=new Date();
+  const last30=new Date(); last30.setDate(now.getDate()-30);
+
+  goats.forEach(g=>{
+    const age=ageMonths(g.dob);
+
+    if(g.gender==="Male") age>=6?adultM++:childM++;
+    if(g.gender==="Female"){
+      age>=6?adultF++:childF++;
+      if(g.life_status==="Pregnant") preg++;
+    }
+
+    if(g.dob && new Date(g.dob)>=last30) born++;
+
+    const ref=g.updated_at||g.created_at;
+    if(ref && new Date(ref)>=last30){
+      if(g.status==="Sold") sold++;
+      if(g.status==="Dead") dead++;
+    }
+  });
+
+  adultMale.innerText=adultM;
+  childMale.innerText=childM;
+  adultFemale.innerText=adultF;
+  childFemale.innerText=childF;
+  pregnantGoats.innerText=preg;
+  born30.innerText=born;
+  sold30.innerText=sold;
+  dead30.innerText=dead;
+
+  alerts.innerHTML="";
+  if(dead/Math.max(goats.length,1)>=0.2)
+    alerts.innerHTML+=`<div class="card alert-danger">🚨 High death rate in last 30 days</div>`;
+  if(born<=2)
+    alerts.innerHTML+=`<div class="card alert-warning">⚠️ Low birth rate in last 30 days</div>`;
+
+  new Chart(genderChart,{
+    type:"pie",
+    data:{labels:["Male","Female"],datasets:[{data:[adultM+childM,adultF+childF]}]}
+  });
+
+  new Chart(ageChart,{
+    type:"bar",
+    data:{labels:["Adult M","Child M","Adult F","Child F"],datasets:[{data:[adultM,childM,adultF,childF]}]}
+  });
+
+  new Chart(activityChart,{
+    type:"bar",
+    data:{labels:["Born","Sold","Dead"],datasets:[{data:[born,sold,dead]}]}
+  });
+
+  updatedAt.innerText="Last updated: "+new Date().toLocaleString();
+}
+
 loadDashboard();
 </script>
 
