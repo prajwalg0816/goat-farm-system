@@ -7,15 +7,36 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+/* ================= BASE ================= */
 body{
   font-family:"Segoe UI",Arial;
   background:linear-gradient(135deg,#fdfbfb,#ebedee);
   margin:0;
   padding:16px;
+  animation:pageFade .6s ease;
+}
+@keyframes pageFade{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
 }
 h2{color:#2c5364}
 
-/* CARD */
+/* Floating goat */
+body::before{
+  content:"🐐";
+  position:fixed;
+  top:12px;
+  right:16px;
+  font-size:38px;
+  animation:floatGoat 3s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes floatGoat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+}
+
+/* ================= CARDS ================= */
 .card{
   background:#fff;
   border-radius:16px;
@@ -23,8 +44,36 @@ h2{color:#2c5364}
   box-shadow:0 8px 20px rgba(0,0,0,.08);
   margin-bottom:20px;
 }
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 14px 32px rgba(0,0,0,.12);
+  transition:.3s;
+}
 
-/* FORM */
+/* ================= SUMMARY ================= */
+.summary{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:16px;
+}
+.sum{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+  text-align:center;
+}
+.sum h3{margin:0;color:#555;font-size:15px}
+.sum .num{
+  font-size:28px;
+  font-weight:bold;
+  margin-top:6px;
+}
+.income{border-top:5px solid #1d976c}
+.expense{border-top:5px solid #e84118}
+.profit{border-top:5px solid #2c5364}
+
+/* ================= FORM ================= */
 .form-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -41,36 +90,21 @@ button{
   border-radius:8px;
   font-weight:bold;
   cursor:pointer;
+  transition:.2s;
+}
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
 }
 .save{background:#1d976c;color:#fff}
 .edit{background:#fbc531}
 .delete{background:#e84118;color:#fff}
 
-/* SUMMARY */
-.summary{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:16px;
-}
-.sum-box{
-  background:#fff;
-  border-radius:14px;
-  padding:14px;
-  box-shadow:0 6px 16px rgba(0,0,0,.08);
-  text-align:center;
-}
-.sum-box h3{margin:0;color:#555}
-.sum-box .num{
-  font-size:26px;
-  font-weight:bold;
-  margin-top:6px;
-}
-
-/* TABLE */
+/* ================= TABLE ================= */
 .table-wrap{overflow-x:auto}
 table{
   width:100%;
-  min-width:700px;
+  min-width:750px;
   border-collapse:collapse;
   background:#fff;
   border-radius:14px;
@@ -86,7 +120,7 @@ td{
   text-align:center;
 }
 
-/* MOBILE */
+/* ================= MOBILE ================= */
 @media(max-width:600px){
   h2{font-size:18px}
   table{font-size:13px}
@@ -100,15 +134,15 @@ td{
 
 <!-- SUMMARY -->
 <div class="summary">
-  <div class="sum-box">
+  <div class="sum income">
     <h3>Total Income</h3>
     <div class="num" id="income">₹0</div>
   </div>
-  <div class="sum-box">
+  <div class="sum expense">
     <h3>Total Expense</h3>
     <div class="num" id="expense">₹0</div>
   </div>
-  <div class="sum-box">
+  <div class="sum profit">
     <h3>Net Profit</h3>
     <div class="num" id="profit">₹0</div>
   </div>
@@ -124,7 +158,6 @@ td{
       <option>Income</option>
       <option>Expense</option>
     </select>
-
     <input id="category" placeholder="Category (Milk, Feed, Vet)">
     <input type="number" id="amount" placeholder="Amount">
     <input type="date" id="entry_date">
@@ -153,16 +186,19 @@ td{
 </div>
 
 <script>
-/* ===== SUPABASE ===== */
+/* ================= SUPABASE ================= */
 const db = supabase.createClient(
   "https://jrrorjoxlwqanebnchui.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-entry_date.value = new Date().toISOString().split("T")[0];
+/* Disable future dates */
+entry_date.max = new Date().toISOString().split("T")[0];
+entry_date.value = entry_date.max;
+
 let editId = null;
 
-/* ===== LOAD ===== */
+/* ================= LOAD ================= */
 async function loadFinance(){
   const { data } = await db.from("finance").select("*").order("entry_date",{ascending:false});
   financeTable.innerHTML="";
@@ -190,7 +226,7 @@ async function loadFinance(){
   document.getElementById("profit").innerText = "₹" + (inc-exp);
 }
 
-/* ===== SAVE ===== */
+/* ================= SAVE ================= */
 async function saveFinance(){
   const payload={
     type:type.value,
@@ -211,7 +247,7 @@ async function saveFinance(){
   loadFinance();
 }
 
-/* ===== EDIT ===== */
+/* ================= EDIT ================= */
 function editFinance(f){
   editId=f.id;
   type.value=f.type;
@@ -221,7 +257,7 @@ function editFinance(f){
   note.value=f.note||"";
 }
 
-/* ===== DELETE ===== */
+/* ================= DELETE ================= */
 async function delFinance(id){
   if(confirm("Delete record?")){
     await db.from("finance").delete().eq("id",id);
@@ -229,12 +265,12 @@ async function delFinance(id){
   }
 }
 
-/* ===== CLEAR ===== */
+/* ================= CLEAR ================= */
 function clearForm(){
   type.value="";
   category.value="";
   amount.value="";
-  entry_date.value=new Date().toISOString().split("T")[0];
+  entry_date.value=entry_date.max;
   note.value="";
 }
 
