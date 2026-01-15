@@ -235,50 +235,102 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-const today=new Date().toISOString().split("T")[0];
+/* ====== DATE LIMIT ====== */
+const today = new Date().toISOString().split("T")[0];
 ["bornFrom","bornTo","fromDate","toDate"].forEach(id=>{
-  document.getElementById(id).max=today;
+  document.getElementById(id).max = today;
 });
 
+/* ====== AGE ====== */
 function ageMonths(d){
   if(!d) return 0;
-  const dob=new Date(d+"T00:00:00");
-  const now=new Date();
-  return (now.getFullYear()-dob.getFullYear())*12+(now.getMonth()-dob.getMonth());
+  const dob = new Date(d+"T00:00:00");
+  const now = new Date();
+  return (now.getFullYear()-dob.getFullYear())*12 + (now.getMonth()-dob.getMonth());
 }
 
+/* ====== LOAD GOATS (FIXED FILTERS) ====== */
 async function loadGoats(){
-  const { data } = await db.from("goats").select("*");
-  goatTable.innerHTML="";
+  goatTable.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
+
+  const filter = goatFilter.value;
+  const bf = bornFrom.value || "1900-01-01";
+  const bt = bornTo.value || today;
+
+  const { data, error } = await db
+    .from("goats")
+    .select("*")
+    .gte("dob", bf)
+    .lte("dob", bt);
+
+  if(error){
+    goatTable.innerHTML = "<tr><td colspan='8'>Error loading goats</td></tr>";
+    return;
+  }
+
+  goatTable.innerHTML = "";
 
   data.forEach(g=>{
-    const row=document.createElement("tr");
-    row.innerHTML=`
-<td>
-  <div class="img-wrap loading">
-    ${g.image ? `<img src="${g.image}" crossorigin="anonymous">` : ""}
-  </div>
-</td>
-<td>${g.goat_id||"-"}</td>
-<td>${g.breed||"-"}</td>
-<td>${g.gender||"-"}</td>
-<td>${g.dob||"-"}</td>
-<td>${ageMonths(g.dob)}</td>
-<td>${g.status||"Live"}</td>
-<td>${g.life_status||"-"}</td>`;
-    goatTable.appendChild(row);
+    const age = ageMonths(g.dob);
+    let show = false;
 
-    const wrap=row.querySelector(".img-wrap");
-    const img=wrap.querySelector("img");
-    if(img){
-      img.onload=()=>wrap.className="img-wrap loaded";
-      img.onerror=()=>wrap.className="img-wrap error";
-    }
+    if(filter==="all") show = true;
+    if(filter==="adult_male" && g.gender==="Male" && age>=6) show=true;
+    if(filter==="child_male" && g.gender==="Male" && age<6) show=true;
+    if(filter==="adult_female" && g.gender==="Female" && age>=6) show=true;
+    if(filter==="child_female" && g.gender==="Female" && age<6) show=true;
+    if(filter==="pregnant" && g.life_status==="Pregnant") show=true;
+
+    if(!show) return;
+
+    const imgHTML = g.image
+      ? `
+      <div class="img-wrap loading">
+        <img src="${g.image}?width=160"
+             loading="lazy"
+             crossorigin="anonymous"
+             onload="this.parentNode.className='img-wrap loaded'"
+             onerror="this.parentNode.className='img-wrap error'">
+      </div>`
+      : "-";
+
+    goatTable.innerHTML += `
+<tr>
+  <td>${imgHTML}</td>
+  <td>${g.goat_id||"-"}</td>
+  <td>${g.breed||"-"}</td>
+  <td>${g.gender||"-"}</td>
+  <td>${g.dob||"-"}</td>
+  <td>${age}</td>
+  <td>${g.status||"Live"}</td>
+  <td>${g.life_status||"-"}</td>
+</tr>`;
   });
+
+  if(goatTable.innerHTML===""){
+    goatTable.innerHTML="<tr><td colspan='8'>No records found</td></tr>";
+  }
 }
 
+/* ====== LOAD FINANCE ====== */
 async function loadFinance(){
-  const { data } = await db.from("finance").select("*");
+  financeTable.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+
+  const from = fromDate.value || "1900-01-01";
+  const to = toDate.value || today;
+
+  const { data, error } = await db
+    .from("finance")
+    .select("*")
+    .gte("entry_date", from)
+    .lte("entry_date", to)
+    .order("entry_date",{ascending:false});
+
+  if(error){
+    financeTable.innerHTML="<tr><td colspan='5'>Error</td></tr>";
+    return;
+  }
+
   financeTable.innerHTML="";
   data.forEach(f=>{
     financeTable.innerHTML+=`
@@ -292,11 +344,14 @@ async function loadFinance(){
   });
 }
 
+/* ====== WAIT FOR IMAGES BEFORE PRINT ====== */
 function waitForImages(){
-  const imgs=[...document.querySelectorAll(".img-wrap img")];
+  const imgs = [...document.querySelectorAll(".img-wrap img")];
   return Promise.all(imgs.map(img=>{
     if(img.complete) return Promise.resolve();
-    return new Promise(res=>img.onload=img.onerror=res);
+    return new Promise(res=>{
+      img.onload = img.onerror = res;
+    });
   }));
 }
 
@@ -306,15 +361,18 @@ async function printGoats(){
   window.print();
   financeReport.style.display="block";
 }
+
 async function printFinance(){
   goatReport.style.display="none";
   window.print();
   goatReport.style.display="block";
 }
 
+/* INIT */
 loadGoats();
 loadFinance();
 </script>
+
 
 </body>
 </html>
