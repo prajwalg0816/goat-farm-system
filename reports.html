@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📑 Farm Reports</title>
+<title>📑 Reports</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 /* ================= BASE ================= */
@@ -14,13 +13,11 @@ body{
   background:linear-gradient(135deg,#fdfbfb,#ebedee);
   margin:0;
   padding:16px;
-  animation:fade .6s ease;
 }
-@keyframes fade{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
+h1,h2{
+  color:#2c5364;
+  margin-bottom:10px;
 }
-h1,h2{color:#2c5364}
 
 /* Floating goat */
 body::before{
@@ -65,9 +62,9 @@ nav a:hover{
   display:flex;
   gap:12px;
   flex-wrap:wrap;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
-input{
+select,input{
   padding:8px;
   border-radius:8px;
   border:1px solid #ccc;
@@ -78,49 +75,58 @@ button{
   border-radius:8px;
   font-weight:bold;
   cursor:pointer;
+  background:#2c5364;
+  color:#fff;
 }
-.filter{background:#1d976c;color:#fff}
-.pdf{background:#2c5364;color:#fff}
-
-/* ================= GRID ================= */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:16px;
+.pdf{
+  background:#1d976c;
 }
 
 /* ================= CARD ================= */
 .card{
   background:#fff;
   border-radius:16px;
-  padding:18px;
+  padding:16px;
   box-shadow:0 8px 22px rgba(0,0,0,.08);
-}
-.card h3{margin:0;color:#555}
-.num{font-size:26px;font-weight:bold;margin-top:6px}
-
-/* ALERTS */
-.alert-low{
-  border-left:6px solid #e84118;
-  background:#fff5f5;
-}
-.alert-high{
-  border-left:6px solid #fbc531;
-  background:#fffbea;
+  margin-bottom:20px;
 }
 
-/* ================= PRINT ================= */
+/* ================= TABLE ================= */
+.table-wrap{overflow-x:auto}
+table{
+  width:100%;
+  min-width:900px;
+  border-collapse:collapse;
+}
+th{
+  background:#2c5364;
+  color:#fff;
+  padding:10px;
+}
+td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+  text-align:center;
+}
+
+/* ================= PRINT (PDF) ================= */
 @media print{
-  nav,.controls,body::before{display:none}
+  nav,.controls,body::before,.pdf{display:none}
   body{background:#fff}
   .card{box-shadow:none}
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:600px){
+  h1,h2{font-size:18px}
+  table{font-size:13px}
 }
 </style>
 </head>
 
 <body>
 
-<h1>📑 Farm Reports</h1>
+<h1>📑 Reports</h1>
 
 <nav>
   <a href="owner.html">👑 Owner</a>
@@ -129,57 +135,69 @@ button{
   <a href="finance.html">💰 Finance</a>
 </nav>
 
-<!-- FILTERS -->
+<!-- ================= EXPORT ================= -->
 <div class="controls">
-  <input type="date" id="fromDate">
-  <input type="date" id="toDate">
-  <button class="filter" onclick="loadReports()">🔍 Apply Filter</button>
-  <button class="pdf" onclick="window.print()">📄 Export PDF</button>
+  <button class="pdf" onclick="downloadPDF()">⬇ Download PDF</button>
 </div>
 
-<!-- SUMMARY -->
-<div class="grid">
-  <div class="card">
-    <h3>Total Goats</h3>
-    <div class="num" id="totalGoats">0</div>
+<!-- ================= GOAT REPORT ================= -->
+<div class="card">
+  <h2>🐐 Goat Reports</h2>
+
+  <div class="controls">
+    <select id="goatFilter">
+      <option value="all">All Goats</option>
+      <option value="adult_male">Adult Males (≥6 months)</option>
+      <option value="child_male">Child Males (&lt;6 months)</option>
+      <option value="adult_female">Adult Females (≥6 months)</option>
+      <option value="child_female">Child Females (&lt;6 months)</option>
+      <option value="pregnant">Pregnant Goats</option>
+    </select>
+
+    <button onclick="loadGoats()">Apply</button>
   </div>
-  <div class="card">
-    <h3>Total Income</h3>
-    <div class="num" id="income">₹0</div>
-  </div>
-  <div class="card">
-    <h3>Total Expense</h3>
-    <div class="num" id="expense">₹0</div>
-  </div>
-  <div class="card">
-    <h3>Net Profit</h3>
-    <div class="num" id="profit">₹0</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Breed</th>
+          <th>Gender</th>
+          <th>DOB</th>
+          <th>Age (Months)</th>
+          <th>Status</th>
+          <th>Life Status</th>
+        </tr>
+      </thead>
+      <tbody id="goatTable"></tbody>
+    </table>
   </div>
 </div>
 
-<br>
+<!-- ================= FINANCE REPORT ================= -->
+<div class="card">
+  <h2>💰 Finance Transactions</h2>
 
-<!-- ALERTS -->
-<div class="grid">
-  <div class="card alert-low" id="profitAlert" style="display:none">
-    ⚠️ Profit is very low for selected period
+  <div class="controls">
+    <input type="date" id="fromDate">
+    <input type="date" id="toDate">
+    <button onclick="loadFinance()">Apply</button>
   </div>
-  <div class="card alert-high" id="expenseAlert" style="display:none">
-    ⚠️ Expenses are unusually high
-  </div>
-</div>
 
-<br>
-
-<!-- CHARTS -->
-<div class="grid">
-  <div class="card">
-    <h2>🐐 Goat Distribution</h2>
-    <canvas id="goatChart"></canvas>
-  </div>
-  <div class="card">
-    <h2>💰 Monthly Finance</h2>
-    <canvas id="financeChart"></canvas>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody id="financeTable"></tbody>
+    </table>
   </div>
 </div>
 
@@ -190,69 +208,79 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-let goatChartObj, financeChartObj;
+/* ================= AGE CALC ================= */
+function ageMonths(dob){
+  if(!dob) return 0;
+  const d=new Date(dob+"T00:00:00");
+  const t=new Date();
+  return (t.getFullYear()-d.getFullYear())*12+(t.getMonth()-d.getMonth());
+}
 
-/* ================= LOAD ================= */
-async function loadReports(){
-  const from = fromDate.value || "1900-01-01";
-  const to = toDate.value || "2999-12-31";
+/* ================= GOATS ================= */
+async function loadGoats(){
+  const filter=goatFilter.value;
+  const { data } = await db.from("goats").select("*");
+  goatTable.innerHTML="";
 
-  /* GOATS */
-  const { data: goats } = await db.from("goats").select("*");
-  totalGoats.innerText = goats.length;
+  data.forEach(g=>{
+    const age=ageMonths(g.dob);
+    let show=false;
 
-  let male=0,female=0;
-  goats.forEach(g=>{
-    if(g.gender==="Male") male++;
-    if(g.gender==="Female") female++;
-  });
+    if(filter==="all") show=true;
+    if(filter==="adult_male" && g.gender==="Male" && age>=6) show=true;
+    if(filter==="child_male" && g.gender==="Male" && age<6) show=true;
+    if(filter==="adult_female" && g.gender==="Female" && age>=6) show=true;
+    if(filter==="child_female" && g.gender==="Female" && age<6) show=true;
+    if(filter==="pregnant" && g.life_status==="Pregnant") show=true;
 
-  if(goatChartObj) goatChartObj.destroy();
-  goatChartObj = new Chart(goatChart,{
-    type:"pie",
-    data:{
-      labels:["Male","Female"],
-      datasets:[{data:[male,female],backgroundColor:["#3498db","#e84393"]}]
-    }
-  });
-
-  /* FINANCE */
-  const { data: finance } = await db
-    .from("finance")
-    .select("*")
-    .gte("entry_date",from)
-    .lte("entry_date",to);
-
-  let inc=0,exp=0,months={};
-  finance.forEach(f=>{
-    const m=f.entry_date.substring(0,7);
-    months[m]=months[m]||{i:0,e:0};
-    if(f.type==="Income"){inc+=+f.amount;months[m].i+=+f.amount}
-    if(f.type==="Expense"){exp+=+f.amount;months[m].e+=+f.amount}
-  });
-
-  income.innerText="₹"+inc;
-  expense.innerText="₹"+exp;
-  profit.innerText="₹"+(inc-exp);
-
-  profitAlert.style.display = (inc-exp)<5000 ? "block":"none";
-  expenseAlert.style.display = exp>inc*0.7 ? "block":"none";
-
-  if(financeChartObj) financeChartObj.destroy();
-  financeChartObj=new Chart(financeChart,{
-    type:"bar",
-    data:{
-      labels:Object.keys(months),
-      datasets:[
-        {label:"Income",data:Object.values(months).map(v=>v.i),backgroundColor:"#1d976c"},
-        {label:"Expense",data:Object.values(months).map(v=>v.e),backgroundColor:"#e84118"}
-      ]
+    if(show){
+      goatTable.innerHTML+=`
+<tr>
+  <td>${g.goat_id}</td>
+  <td>${g.breed}</td>
+  <td>${g.gender}</td>
+  <td>${g.dob||"-"}</td>
+  <td>${age}</td>
+  <td>${g.status||"Live"}</td>
+  <td>${g.life_status||"-"}</td>
+</tr>`;
     }
   });
 }
 
+/* ================= FINANCE ================= */
+async function loadFinance(){
+  const from=fromDate.value||"1900-01-01";
+  const to=toDate.value||"2999-12-31";
+
+  const { data } = await db
+    .from("finance")
+    .select("*")
+    .gte("entry_date",from)
+    .lte("entry_date",to)
+    .order("entry_date",{ascending:false});
+
+  financeTable.innerHTML="";
+  data.forEach(f=>{
+    financeTable.innerHTML+=`
+<tr>
+  <td>${f.entry_date}</td>
+  <td>${f.type}</td>
+  <td>${f.category}</td>
+  <td>₹${f.amount}</td>
+  <td>${f.note||"-"}</td>
+</tr>`;
+  });
+}
+
+/* ================= PDF ================= */
+function downloadPDF(){
+  window.print();
+}
+
 /* INIT */
-loadReports();
+loadGoats();
+loadFinance();
 </script>
 
 </body>
