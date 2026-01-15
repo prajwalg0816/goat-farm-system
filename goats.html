@@ -4,35 +4,47 @@
 <meta charset="UTF-8">
 <title>🐐 Goat Management</title>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ===== LUXURY THEME ===== */
+/* ===== BASE ===== */
 body{
   font-family: "Segoe UI", Arial;
   background: linear-gradient(135deg,#fdfbfb,#ebedee);
-  padding:30px;
+  margin:0;
+  padding:16px;
 }
 h2{
   color:#2c5364;
+  margin-bottom:12px;
 }
+
+/* ===== CARD ===== */
 .card{
   background:#fff;
   border-radius:14px;
-  padding:25px;
-  box-shadow:0 10px 30px rgba(0,0,0,.1);
-  margin-bottom:30px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  margin-bottom:20px;
+}
+
+/* ===== FORM ===== */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
 }
 input,select{
   padding:10px;
-  margin:6px 0;
-  width:100%;
   border-radius:8px;
   border:1px solid #ccc;
+  width:100%;
+}
+input[type=file]{
+  padding:6px;
 }
 button{
-  padding:10px 16px;
+  padding:12px;
   border:none;
   border-radius:8px;
   cursor:pointer;
@@ -44,36 +56,40 @@ button{
 }
 .edit{
   background:#fbc531;
-  color:#000;
 }
 .delete{
   background:#e84118;
   color:#fff;
 }
+
+/* ===== TABLE ===== */
+.table-wrap{
+  overflow-x:auto;
+}
 table{
   width:100%;
   border-collapse:collapse;
-  margin-top:20px;
-  background:#fff;
-  border-radius:14px;
-  overflow:hidden;
+  min-width:900px;
 }
 th{
   background:#2c5364;
   color:#fff;
-  padding:12px;
+  padding:10px;
 }
 td{
-  padding:10px;
+  padding:8px;
   border-bottom:1px solid #eee;
   text-align:center;
 }
 img{
-  border-radius:10px;
+  border-radius:8px;
 }
-#msg{
-  font-weight:bold;
-  margin-top:10px;
+
+/* ===== MOBILE ===== */
+@media(max-width:600px){
+  h2{font-size:18px}
+  th,td{font-size:13px}
+  button{padding:8px}
 }
 </style>
 </head>
@@ -83,38 +99,40 @@ img{
 <h2>🐐 Goat Management</h2>
 
 <div class="card">
-  <input id="goat_id" placeholder="Goat ID">
-  <input id="breed" placeholder="Breed">
+  <div class="form-grid">
+    <input id="goat_id" placeholder="Goat ID">
+    <input id="breed" placeholder="Breed">
 
-  <select id="gender" onchange="toggleFemale()">
-    <option value="">Gender</option>
-    <option>Male</option>
-    <option>Female</option>
-  </select>
+    <select id="gender" onchange="toggleFemale()">
+      <option value="">Gender</option>
+      <option>Male</option>
+      <option>Female</option>
+    </select>
 
-  <label>Date of Birth</label>
-  <input type="date" id="dob">
+    <input type="date" id="dob">
 
-  <select id="status">
-    <option value="Live">Live</option>
-    <option value="Dead">Dead</option>
-    <option value="Sold">Sold</option>
-  </select>
+    <select id="status">
+      <option value="Live">Live</option>
+      <option value="Dead">Dead</option>
+      <option value="Sold">Sold</option>
+    </select>
 
-  <select id="life_status" style="display:none">
-    <option value="">Female Life Status</option>
-    <option>Kid</option>
-    <option>Pregnant</option>
-    <option>Delivered</option>
-  </select>
+    <select id="life_status" style="display:none">
+      <option value="">Female Status</option>
+      <option>Kid</option>
+      <option>Pregnant</option>
+      <option>Delivered</option>
+    </select>
 
-  <input type="file" id="image">
+    <input type="file" id="image">
+  </div>
 
+  <br>
   <button class="save" onclick="saveGoat()">Save / Update Goat</button>
   <p id="msg"></p>
 </div>
 
-<div class="card">
+<div class="card table-wrap">
 <table>
 <thead>
 <tr>
@@ -135,60 +153,68 @@ img{
 </div>
 
 <script>
-/* ===== SUPABASE CONFIG ===== */
+/* ===== SUPABASE ===== */
 const db = supabase.createClient(
   "https://jrrorjoxlwqanebnchui.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-let editId = null;
+/* ===== DISABLE FUTURE DOB ===== */
+dob.max = new Date().toISOString().split("T")[0];
+
+let editId=null;
 
 /* ===== HELPERS ===== */
 function toggleFemale(){
-  life_status.style.display =
-    gender.value === "Female" ? "block" : "none";
+  life_status.style.display = gender.value==="Female"?"block":"none";
 }
 
-function calcAge(d){
-  if(!d) return "-";
-  const b = new Date(d);
-  const t = new Date();
-  let a = t.getFullYear() - b.getFullYear();
-  if(t.getMonth()<b.getMonth() || 
-    (t.getMonth()==b.getMonth() && t.getDate()<b.getDate())) a--;
-  return a;
+function calculateAge(dobStr){
+  if(!dobStr) return "-";
+  const dobDate = new Date(dobStr + "T00:00:00");
+  const today = new Date();
+
+  let years = today.getFullYear() - dobDate.getFullYear();
+  let months = today.getMonth() - dobDate.getMonth();
+
+  if(months < 0){
+    years--;
+    months += 12;
+  }
+  if(years < 0) return "0";
+
+  return `${years}y ${months}m`;
 }
 
-/* ===== LOAD GOATS ===== */
+/* ===== LOAD ===== */
 async function loadGoats(){
   const {data} = await db.from("goats").select("*").order("created_at",{ascending:false});
   goatTable.innerHTML="";
   data.forEach(g=>{
-    goatTable.innerHTML += `
+    goatTable.innerHTML+=`
 <tr>
 <td>${g.image_url?`<img src="${g.image_url}" width="60">`:"-"}</td>
 <td>${g.goat_id}</td>
 <td>${g.breed}</td>
 <td>${g.gender}</td>
-<td>${g.dob ?? "-"}</td>
-<td>${calcAge(g.dob)}</td>
-<td>${g.status ?? "Live"}</td>
-<td>${g.life_status ?? "-"}</td>
-<td><button class="edit" onclick="editGoat('${g.id}',${JSON.stringify(g).replace(/"/g,'&quot;')})">✏️</button></td>
+<td>${g.dob??"-"}</td>
+<td>${calculateAge(g.dob)}</td>
+<td>${g.status??"Live"}</td>
+<td>${g.life_status??"-"}</td>
+<td><button class="edit" onclick='editGoat(${JSON.stringify(g)})'>✏️</button></td>
 <td><button class="delete" onclick="delGoat('${g.id}')">❌</button></td>
 </tr>`;
   });
 }
 
-/* ===== SAVE / UPDATE ===== */
+/* ===== SAVE ===== */
 async function saveGoat(){
-  let imageUrl=null;
-
+  let img=null;
   if(image.files[0]){
     const f=image.files[0];
     const n=Date.now()+"_"+f.name;
     await db.storage.from("goat-images").upload(n,f);
-    imageUrl=db.storage.from("goat-images").getPublicUrl(n).data.publicUrl;
+    img=db.storage.from("goat-images").getPublicUrl(n).data.publicUrl;
   }
 
   const payload={
@@ -196,10 +222,10 @@ async function saveGoat(){
     breed:breed.value,
     gender:gender.value,
     dob:dob.value||null,
-    status:status.value || "Live",
+    status:status.value,
     life_status:gender.value==="Female"?life_status.value:null
   };
-  if(imageUrl) payload.image_url=imageUrl;
+  if(img) payload.image_url=img;
 
   if(editId){
     await db.from("goats").update(payload).eq("id",editId);
@@ -207,14 +233,13 @@ async function saveGoat(){
   }else{
     await db.from("goats").insert([payload]);
   }
-
   clearForm();
   loadGoats();
 }
 
 /* ===== EDIT ===== */
-function editGoat(id,g){
-  editId=id;
+function editGoat(g){
+  editId=g.id;
   goat_id.value=g.goat_id;
   breed.value=g.breed;
   gender.value=g.gender;
