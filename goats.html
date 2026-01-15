@@ -6,41 +6,41 @@
 
 <style>
 body{
-  font-family:Arial;
+  font-family: Arial;
   background:#f4f6f8;
-  padding:20px
+  padding:20px;
 }
 nav a{
   margin-right:15px;
   font-weight:bold;
 }
-input,select,button{
+input, select, button{
   padding:8px;
   margin:6px 0;
 }
 button{
-  cursor:pointer;
   background:#2c5364;
   color:#fff;
   border:none;
+  cursor:pointer;
 }
 table{
   width:100%;
   background:#fff;
   border-collapse:collapse;
-  margin-top:20px
+  margin-top:20px;
 }
-th,td{
+th, td{
   border:1px solid #ddd;
   padding:8px;
-  text-align:center
+  text-align:center;
 }
 img{
-  border-radius:6px
+  border-radius:6px;
 }
-#statusMsg{
+#msg{
   font-weight:bold;
-  margin-top:10px
+  margin-top:10px;
 }
 </style>
 </head>
@@ -55,45 +55,37 @@ img{
 
 <h2>🐐 Add Goat</h2>
 
-<input id="gid" placeholder="Goat ID (required)">
-<br>
+<input id="goat_id" placeholder="Goat ID (required)"><br>
+<input id="breed" placeholder="Breed (required)"><br>
 
-<input id="breed" placeholder="Breed (required)">
-<br>
-
-<select id="gender" onchange="toggleFemaleStatus()">
+<select id="gender" onchange="toggleFemale()">
   <option value="">Select Gender</option>
-  <option value="Male">Male</option>
-  <option value="Female">Female</option>
-</select>
-<br>
+  <option>Male</option>
+  <option>Female</option>
+</select><br>
 
 <label>Date of Birth</label><br>
-<input type="date" id="dob">
-<br>
+<input type="date" id="dob"><br>
 
 <select id="status">
   <option value="Live">Live</option>
   <option value="Dead">Dead</option>
   <option value="Sold">Sold</option>
-</select>
-<br>
+</select><br>
 
-<select id="femaleStatus" style="display:none">
+<select id="life_status" style="display:none">
   <option value="">Female Life Status</option>
   <option value="Kid">Kid</option>
   <option value="Pregnant">Pregnant</option>
   <option value="Delivered">Delivered</option>
-</select>
-<br>
+</select><br>
 
 <label>Goat Image (optional)</label><br>
-<input type="file" id="gimage" accept="image/*">
-<br><br>
+<input type="file" id="image" accept="image/*"><br><br>
 
-<button onclick="saveGoat()">Save Goat</button>
+<button onclick="addGoat()">Save Goat</button>
 
-<p id="statusMsg"></p>
+<p id="msg"></p>
 
 <h2>📋 Goat List</h2>
 
@@ -104,7 +96,7 @@ img{
   <th>ID</th>
   <th>Breed</th>
   <th>Gender</th>
-  <th>DOB</th>
+  <th>Age</th>
   <th>Status</th>
   <th>Life Status</th>
   <th>Delete</th>
@@ -113,48 +105,64 @@ img{
 <tbody id="goatTable"></tbody>
 </table>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-<!-- Firebase init -->
-<script src="firebase.js"></script>
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-function toggleFemaleStatus(){
-  femaleStatus.style.display =
-    gender.value === "Female" ? "block" : "none";
+/* ================= SUPABASE CONFIG ================= */
+const supabaseUrl = "https://jrrorjoxlwqanebnchui.supabase.co";
+const supabaseKey =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k";
+
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+/* ================= HELPERS ================= */
+function toggleFemale(){
+  life_status.style.display = gender.value === "Female" ? "block" : "none";
 }
 
-/* ===== LOAD GOATS ===== */
-db.collection("goats").onSnapshot(snapshot=>{
+function calculateAge(dob){
+  if(!dob) return null;
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+/* ================= LOAD GOATS ================= */
+async function loadGoats(){
+  const { data, error } = await supabase
+    .from("goats")
+    .select("*")
+    .order("created_at", { ascending: false });
+
   goatTable.innerHTML = "";
-  snapshot.forEach(doc=>{
-    const g = doc.data();
-    goatTable.innerHTML += `
+
+  if(data){
+    data.forEach(g=>{
+      goatTable.innerHTML += `
 <tr>
-  <td>${g.image ? `<img src="${g.image}" width="60">` : "-"}</td>
-  <td>${g.gid}</td>
+  <td>${g.image_url ? `<img src="${g.image_url}" width="60">` : "-"}</td>
+  <td>${g.goat_id}</td>
   <td>${g.breed}</td>
   <td>${g.gender}</td>
-  <td>${g.dob || "-"}</td>
+  <td>${g.age ?? "-"}</td>
   <td>${g.status}</td>
-  <td>${g.lifeStatus || "-"}</td>
-  <td>
-    <button onclick="deleteGoat('${doc.id}')">❌</button>
-  </td>
+  <td>${g.life_status ?? "-"}</td>
+  <td><button onclick="deleteGoat('${g.id}')">❌</button></td>
 </tr>`;
-  });
-});
+    });
+  }
+}
 
-/* ===== SAVE GOAT ===== */
-function saveGoat(){
-  const msg = document.getElementById("statusMsg");
+/* ================= ADD GOAT ================= */
+async function addGoat(){
   msg.style.color = "red";
   msg.innerText = "";
 
-  if(!gid.value || !breed.value || !gender.value){
+  if(!goat_id.value || !breed.value || !gender.value){
     msg.innerText = "Goat ID, Breed and Gender are required";
     return;
   }
@@ -162,65 +170,74 @@ function saveGoat(){
   msg.style.color = "green";
   msg.innerText = "Saving goat...";
 
-  const goatData = {
-    gid: gid.value.trim(),
-    breed: breed.value.trim(),
+  let imageUrl = null;
+
+  if(image.files.length > 0){
+    const file = image.files[0];
+    const fileName = Date.now() + "_" + file.name;
+
+    const { error: uploadError } = await supabase
+      .storage
+      .from("goat-images")
+      .upload(fileName, file);
+
+    if(uploadError){
+      msg.style.color = "red";
+      msg.innerText = "Image upload failed";
+      return;
+    }
+
+    imageUrl = supabase
+      .storage
+      .from("goat-images")
+      .getPublicUrl(fileName).data.publicUrl;
+  }
+
+  const age = calculateAge(dob.value);
+
+  const { error } = await supabase.from("goats").insert([{
+    goat_id: goat_id.value,
+    breed: breed.value,
     gender: gender.value,
-    dob: dob.value || "",
-    status: status.value || "Live",
-    lifeStatus: gender.value === "Female" ? femaleStatus.value : "",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
+    dob: dob.value || null,
+    age: age,
+    status: status.value,
+    life_status: gender.value === "Female" ? life_status.value : null,
+    image_url: imageUrl
+  }]);
 
-  const file = gimage.files[0];
-
-  if(file){
-    const ref = storage.ref("goats/" + Date.now() + "_" + file.name);
-    ref.put(file)
-      .then(snap => snap.ref.getDownloadURL())
-      .then(url => {
-        goatData.image = url;
-        return db.collection("goats").add(goatData);
-      })
-      .then(() => {
-        msg.innerText = "Goat saved successfully ✅";
-        clearForm();
-      })
-      .catch(err => {
-        msg.style.color = "red";
-        msg.innerText = "Error: " + err.message;
-      });
-  } else {
-    db.collection("goats").add(goatData)
-      .then(() => {
-        msg.innerText = "Goat saved successfully ✅";
-        clearForm();
-      })
-      .catch(err => {
-        msg.style.color = "red";
-        msg.innerText = "Error: " + err.message;
-      });
+  if(error){
+    msg.style.color = "red";
+    msg.innerText = error.message;
+  }else{
+    msg.innerText = "Goat saved successfully ✅";
+    clearForm();
+    loadGoats();
   }
 }
 
-/* ===== DELETE GOAT ===== */
-function deleteGoat(id){
+/* ================= DELETE GOAT ================= */
+async function deleteGoat(id){
   if(confirm("Delete this goat?")){
-    db.collection("goats").doc(id).delete();
+    await supabase.from("goats").delete().eq("id", id);
+    loadGoats();
   }
 }
 
-/* ===== CLEAR FORM ===== */
+/* ================= CLEAR FORM ================= */
 function clearForm(){
-  gid.value = "";
+  goat_id.value = "";
   breed.value = "";
   gender.value = "";
   dob.value = "";
   status.value = "Live";
-  femaleStatus.value = "";
-  femaleStatus.style.display = "none";
-  gimage.value = "";
+  life_status.value = "";
+  life_status.style.display = "none";
+  image.value = "";
 }
+
+/* INIT */
+loadGoats();
 </script>
 
 </body>
