@@ -100,13 +100,46 @@ td{
   text-align:center;
 }
 
-/* GOAT IMAGE */
-.goat-img{
+/* IMAGE LOADER */
+.img-wrap{
   width:80px;
   height:80px;
-  object-fit:cover;
   border-radius:10px;
-  border:1px solid #ddd;
+  overflow:hidden;
+  position:relative;
+  margin:auto;
+  background:#eee;
+}
+.img-wrap.loading::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,#eee,#ddd,#eee);
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite;
+}
+@keyframes shimmer{
+  0%{background-position:200%}
+  100%{background-position:-200%}
+}
+.img-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:none;
+}
+.img-wrap.loaded img{
+  display:block;
+}
+.img-wrap.error::after{
+  content:"❌";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  background:#f5f5f5;
 }
 
 /* PRINT */
@@ -114,11 +147,6 @@ td{
   nav,.no-print,body::before{display:none}
   body{background:#fff}
   .card{box-shadow:none}
-  table{min-width:100%}
-  .goat-img{
-    width:80px;
-    height:80px;
-  }
 }
 </style>
 </head>
@@ -134,71 +162,71 @@ td{
   <a href="finance.html">💰 Finance</a>
 </nav>
 
-<!-- ================= GOAT REPORT ================= -->
+<!-- GOAT REPORT -->
 <div class="card" id="goatReport">
-  <h2>🐐 Goat Reports</h2>
+<h2>🐐 Goat Reports</h2>
 
-  <div class="controls no-print">
-    <select id="goatFilter">
-      <option value="all">All Goats</option>
-      <option value="adult_male">Adult Males (≥6 months)</option>
-      <option value="child_male">Child Males (&lt;6 months)</option>
-      <option value="adult_female">Adult Females (≥6 months)</option>
-      <option value="child_female">Child Females (&lt;6 months)</option>
-      <option value="pregnant">Pregnant Goats</option>
-    </select>
+<div class="controls no-print">
+  <select id="goatFilter">
+    <option value="all">All Goats</option>
+    <option value="adult_male">Adult Males</option>
+    <option value="child_male">Child Males</option>
+    <option value="adult_female">Adult Females</option>
+    <option value="child_female">Child Females</option>
+    <option value="pregnant">Pregnant Goats</option>
+  </select>
 
-    <input type="date" id="bornFrom">
-    <input type="date" id="bornTo">
+  <input type="date" id="bornFrom">
+  <input type="date" id="bornTo">
 
-    <button onclick="loadGoats()">Apply</button>
-    <button class="pdf" onclick="printGoats()">⬇ Goat PDF</button>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Image</th>
-          <th>ID</th>
-          <th>Breed</th>
-          <th>Gender</th>
-          <th>DOB</th>
-          <th>Age (Months)</th>
-          <th>Status</th>
-          <th>Life Status</th>
-        </tr>
-      </thead>
-      <tbody id="goatTable"></tbody>
-    </table>
-  </div>
+  <button onclick="loadGoats()">Apply</button>
+  <button class="pdf" onclick="printGoats()">⬇ Goat PDF</button>
 </div>
 
-<!-- ================= FINANCE REPORT ================= -->
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>Image</th>
+  <th>ID</th>
+  <th>Breed</th>
+  <th>Gender</th>
+  <th>DOB</th>
+  <th>Age</th>
+  <th>Status</th>
+  <th>Life</th>
+</tr>
+</thead>
+<tbody id="goatTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- FINANCE REPORT -->
 <div class="card" id="financeReport">
-  <h2>💰 Finance Transactions</h2>
+<h2>💰 Finance Transactions</h2>
 
-  <div class="controls no-print">
-    <input type="date" id="fromDate">
-    <input type="date" id="toDate">
-    <button onclick="loadFinance()">Apply</button>
-    <button class="pdf" onclick="printFinance()">⬇ Finance PDF</button>
-  </div>
+<div class="controls no-print">
+  <input type="date" id="fromDate">
+  <input type="date" id="toDate">
+  <button onclick="loadFinance()">Apply</button>
+  <button class="pdf" onclick="printFinance()">⬇ Finance PDF</button>
+</div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Category</th>
-          <th>Amount</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody id="financeTable"></tbody>
-    </table>
-  </div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Type</th>
+  <th>Category</th>
+  <th>Amount</th>
+  <th>Note</th>
+</tr>
+</thead>
+<tbody id="financeTable"></tbody>
+</table>
+</div>
 </div>
 
 <script>
@@ -207,64 +235,50 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-/* DISABLE FUTURE DATES */
 const today=new Date().toISOString().split("T")[0];
 ["bornFrom","bornTo","fromDate","toDate"].forEach(id=>{
-  document.getElementById(id).setAttribute("max",today);
+  document.getElementById(id).max=today;
 });
 
-function ageMonths(dob){
-  if(!dob) return 0;
-  const d=new Date(dob+"T00:00:00");
-  const t=new Date();
-  return (t.getFullYear()-d.getFullYear())*12+(t.getMonth()-d.getMonth());
+function ageMonths(d){
+  if(!d) return 0;
+  const dob=new Date(d+"T00:00:00");
+  const now=new Date();
+  return (now.getFullYear()-dob.getFullYear())*12+(now.getMonth()-dob.getMonth());
 }
 
 async function loadGoats(){
-  const filter=goatFilter.value;
-  const bf=bornFrom.value||"1900-01-01";
-  const bt=bornTo.value||today;
-
-  const { data } = await db.from("goats").select("*").gte("dob",bf).lte("dob",bt);
-
+  const { data } = await db.from("goats").select("*");
   goatTable.innerHTML="";
+
   data.forEach(g=>{
-    const age=ageMonths(g.dob);
-    let show=false;
+    const row=document.createElement("tr");
+    row.innerHTML=`
+<td>
+  <div class="img-wrap loading">
+    ${g.image ? `<img src="${g.image}" crossorigin="anonymous">` : ""}
+  </div>
+</td>
+<td>${g.goat_id||"-"}</td>
+<td>${g.breed||"-"}</td>
+<td>${g.gender||"-"}</td>
+<td>${g.dob||"-"}</td>
+<td>${ageMonths(g.dob)}</td>
+<td>${g.status||"Live"}</td>
+<td>${g.life_status||"-"}</td>`;
+    goatTable.appendChild(row);
 
-    if(filter==="all") show=true;
-    if(filter==="adult_male" && g.gender==="Male" && age>=6) show=true;
-    if(filter==="child_male" && g.gender==="Male" && age<6) show=true;
-    if(filter==="adult_female" && g.gender==="Female" && age>=6) show=true;
-    if(filter==="child_female" && g.gender==="Female" && age<6) show=true;
-    if(filter==="pregnant" && g.life_status==="Pregnant") show=true;
-
-    if(show){
-      goatTable.innerHTML+=`
-<tr>
-  <td>${g.image ? `<img src="${g.image}" class="goat-img">` : "-"}</td>
-  <td>${g.goat_id}</td>
-  <td>${g.breed}</td>
-  <td>${g.gender}</td>
-  <td>${g.dob||"-"}</td>
-  <td>${age}</td>
-  <td>${g.status||"Live"}</td>
-  <td>${g.life_status||"-"}</td>
-</tr>`;
+    const wrap=row.querySelector(".img-wrap");
+    const img=wrap.querySelector("img");
+    if(img){
+      img.onload=()=>wrap.className="img-wrap loaded";
+      img.onerror=()=>wrap.className="img-wrap error";
     }
   });
 }
 
 async function loadFinance(){
-  const from=fromDate.value||"1900-01-01";
-  const to=toDate.value||today;
-
-  const { data } = await db.from("finance")
-    .select("*")
-    .gte("entry_date",from)
-    .lte("entry_date",to)
-    .order("entry_date",{ascending:false});
-
+  const { data } = await db.from("finance").select("*");
   financeTable.innerHTML="";
   data.forEach(f=>{
     financeTable.innerHTML+=`
@@ -278,12 +292,21 @@ async function loadFinance(){
   });
 }
 
-function printGoats(){
+function waitForImages(){
+  const imgs=[...document.querySelectorAll(".img-wrap img")];
+  return Promise.all(imgs.map(img=>{
+    if(img.complete) return Promise.resolve();
+    return new Promise(res=>img.onload=img.onerror=res);
+  }));
+}
+
+async function printGoats(){
   financeReport.style.display="none";
+  await waitForImages();
   window.print();
   financeReport.style.display="block";
 }
-function printFinance(){
+async function printFinance(){
   goatReport.style.display="none";
   window.print();
   goatReport.style.display="block";
