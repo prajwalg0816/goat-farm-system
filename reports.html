@@ -235,13 +235,13 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-/* ====== DATE LIMIT ====== */
+/* DATE LIMIT */
 const today = new Date().toISOString().split("T")[0];
 ["bornFrom","bornTo","fromDate","toDate"].forEach(id=>{
   document.getElementById(id).max = today;
 });
 
-/* ====== AGE ====== */
+/* AGE */
 function ageMonths(d){
   if(!d) return 0;
   const dob = new Date(d+"T00:00:00");
@@ -249,7 +249,7 @@ function ageMonths(d){
   return (now.getFullYear()-dob.getFullYear())*12 + (now.getMonth()-dob.getMonth());
 }
 
-/* ====== LOAD GOATS (FIXED FILTERS) ====== */
+/* LOAD GOATS */
 async function loadGoats(){
   goatTable.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
 
@@ -312,7 +312,7 @@ async function loadGoats(){
   }
 }
 
-/* ====== LOAD FINANCE ====== */
+/* LOAD FINANCE */
 async function loadFinance(){
   financeTable.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
 
@@ -344,7 +344,7 @@ async function loadFinance(){
   });
 }
 
-/* ====== WAIT FOR IMAGES BEFORE PRINT ====== */
+/* WAIT FOR IMAGES */
 function waitForImages(){
   const imgs = [...document.querySelectorAll(".img-wrap img")];
   return Promise.all(imgs.map(img=>{
@@ -373,6 +373,25 @@ loadGoats();
 loadFinance();
 </script>
 
+<!-- ================= ADD-ONLY: SEPARATE PDF FILE NAMES ================= -->
+<script>
+const ORIGINAL_TITLE = document.title;
+
+const _printGoats = window.printGoats;
+const _printFinance = window.printFinance;
+
+window.printGoats = async function(){
+  document.title = "Goat_Report";
+  await _printGoats();
+  document.title = ORIGINAL_TITLE;
+};
+
+window.printFinance = async function(){
+  document.title = "Finance_Report";
+  await _printFinance();
+  document.title = ORIGINAL_TITLE;
+};
+</script>
 
 </body>
 </html>
