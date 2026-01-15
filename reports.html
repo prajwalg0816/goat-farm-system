@@ -14,10 +14,7 @@ body{
   margin:0;
   padding:16px;
 }
-h1,h2{
-  color:#2c5364;
-  margin-bottom:10px;
-}
+h1,h2{color:#2c5364}
 
 /* Floating goat */
 body::before{
@@ -109,9 +106,9 @@ td{
   text-align:center;
 }
 
-/* ================= PRINT (PDF) ================= */
+/* ================= PRINT ================= */
 @media print{
-  nav,.controls,body::before,.pdf{display:none}
+  nav,.no-print,body::before{display:none}
   body{background:#fff}
   .card{box-shadow:none}
 }
@@ -128,23 +125,18 @@ td{
 
 <h1>📑 Reports</h1>
 
-<nav>
+<nav class="no-print">
   <a href="owner.html">👑 Owner</a>
   <a href="dashboard.html">📊 Dashboard</a>
   <a href="goats.html">🐐 Goats</a>
   <a href="finance.html">💰 Finance</a>
 </nav>
 
-<!-- ================= EXPORT ================= -->
-<div class="controls">
-  <button class="pdf" onclick="downloadPDF()">⬇ Download PDF</button>
-</div>
-
 <!-- ================= GOAT REPORT ================= -->
-<div class="card">
+<div class="card" id="goatReport">
   <h2>🐐 Goat Reports</h2>
 
-  <div class="controls">
+  <div class="controls no-print">
     <select id="goatFilter">
       <option value="all">All Goats</option>
       <option value="adult_male">Adult Males (≥6 months)</option>
@@ -154,7 +146,11 @@ td{
       <option value="pregnant">Pregnant Goats</option>
     </select>
 
+    <input type="date" id="bornFrom">
+    <input type="date" id="bornTo">
+
     <button onclick="loadGoats()">Apply</button>
+    <button class="pdf" onclick="printGoats()">⬇ Download Goat PDF</button>
   </div>
 
   <div class="table-wrap">
@@ -176,13 +172,14 @@ td{
 </div>
 
 <!-- ================= FINANCE REPORT ================= -->
-<div class="card">
+<div class="card" id="financeReport">
   <h2>💰 Finance Transactions</h2>
 
-  <div class="controls">
+  <div class="controls no-print">
     <input type="date" id="fromDate">
     <input type="date" id="toDate">
     <button onclick="loadFinance()">Apply</button>
+    <button class="pdf" onclick="printFinance()">⬇ Download Finance PDF</button>
   </div>
 
   <div class="table-wrap">
@@ -208,7 +205,7 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-/* ================= AGE CALC ================= */
+/* ================= AGE ================= */
 function ageMonths(dob){
   if(!dob) return 0;
   const d=new Date(dob+"T00:00:00");
@@ -219,7 +216,15 @@ function ageMonths(dob){
 /* ================= GOATS ================= */
 async function loadGoats(){
   const filter=goatFilter.value;
-  const { data } = await db.from("goats").select("*");
+  const bf=bornFrom.value||"1900-01-01";
+  const bt=bornTo.value||"2999-12-31";
+
+  const { data } = await db
+    .from("goats")
+    .select("*")
+    .gte("dob",bf)
+    .lte("dob",bt);
+
   goatTable.innerHTML="";
 
   data.forEach(g=>{
@@ -274,8 +279,15 @@ async function loadFinance(){
 }
 
 /* ================= PDF ================= */
-function downloadPDF(){
+function printGoats(){
+  document.getElementById("financeReport").style.display="none";
   window.print();
+  document.getElementById("financeReport").style.display="block";
+}
+function printFinance(){
+  document.getElementById("goatReport").style.display="none";
+  window.print();
+  document.getElementById("goatReport").style.display="block";
 }
 
 /* INIT */
