@@ -7,7 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ================= BASE ================= */
 body{
   font-family:"Segoe UI",Arial;
   background:linear-gradient(135deg,#fdfbfb,#ebedee);
@@ -31,7 +30,7 @@ body::before{
   50%{transform:translateY(-10px)}
 }
 
-/* ================= NAV ================= */
+/* NAV */
 nav{
   background:#fff;
   border-radius:14px;
@@ -49,12 +48,9 @@ nav a{
   padding:8px 14px;
   border-radius:20px;
 }
-nav a:hover{
-  background:#2c5364;
-  color:#fff;
-}
+nav a:hover{background:#2c5364;color:#fff}
 
-/* ================= CONTROLS ================= */
+/* CONTROLS */
 .controls{
   display:flex;
   gap:12px;
@@ -75,11 +71,9 @@ button{
   background:#2c5364;
   color:#fff;
 }
-.pdf{
-  background:#1d976c;
-}
+.pdf{background:#1d976c}
 
-/* ================= CARD ================= */
+/* CARD */
 .card{
   background:#fff;
   border-radius:16px;
@@ -88,7 +82,7 @@ button{
   margin-bottom:20px;
 }
 
-/* ================= TABLE ================= */
+/* TABLE */
 .table-wrap{overflow-x:auto}
 table{
   width:100%;
@@ -106,17 +100,11 @@ td{
   text-align:center;
 }
 
-/* ================= PRINT ================= */
+/* PRINT */
 @media print{
   nav,.no-print,body::before{display:none}
   body{background:#fff}
   .card{box-shadow:none}
-}
-
-/* ================= MOBILE ================= */
-@media(max-width:600px){
-  h1,h2{font-size:18px}
-  table{font-size:13px}
 }
 </style>
 </head>
@@ -150,7 +138,7 @@ td{
     <input type="date" id="bornTo">
 
     <button onclick="loadGoats()">Apply</button>
-    <button class="pdf" onclick="printGoats()">⬇ Download Goat PDF</button>
+    <button class="pdf" onclick="printGoats()">⬇ Goat PDF</button>
   </div>
 
   <div class="table-wrap">
@@ -179,7 +167,7 @@ td{
     <input type="date" id="fromDate">
     <input type="date" id="toDate">
     <button onclick="loadFinance()">Apply</button>
-    <button class="pdf" onclick="printFinance()">⬇ Download Finance PDF</button>
+    <button class="pdf" onclick="printFinance()">⬇ Finance PDF</button>
   </div>
 
   <div class="table-wrap">
@@ -205,7 +193,13 @@ const db = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impycm9yam94bHdxYW5lYm5jaHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NDk5ODMsImV4cCI6MjA4NDAyNTk4M30.KgITXQJmA9TNw6lbHW94egKOW_gW6nPK5UViDNC5l5k"
 );
 
-/* ================= AGE ================= */
+/* ================= DISABLE FUTURE DATES ================= */
+const today = new Date().toISOString().split("T")[0];
+["bornFrom","bornTo","fromDate","toDate"].forEach(id=>{
+  document.getElementById(id).setAttribute("max", today);
+});
+
+/* AGE */
 function ageMonths(dob){
   if(!dob) return 0;
   const d=new Date(dob+"T00:00:00");
@@ -213,11 +207,11 @@ function ageMonths(dob){
   return (t.getFullYear()-d.getFullYear())*12+(t.getMonth()-d.getMonth());
 }
 
-/* ================= GOATS ================= */
+/* GOATS */
 async function loadGoats(){
   const filter=goatFilter.value;
   const bf=bornFrom.value||"1900-01-01";
-  const bt=bornTo.value||"2999-12-31";
+  const bt=bornTo.value||today;
 
   const { data } = await db
     .from("goats")
@@ -226,7 +220,6 @@ async function loadGoats(){
     .lte("dob",bt);
 
   goatTable.innerHTML="";
-
   data.forEach(g=>{
     const age=ageMonths(g.dob);
     let show=false;
@@ -253,10 +246,10 @@ async function loadGoats(){
   });
 }
 
-/* ================= FINANCE ================= */
+/* FINANCE */
 async function loadFinance(){
   const from=fromDate.value||"1900-01-01";
-  const to=toDate.value||"2999-12-31";
+  const to=toDate.value||today;
 
   const { data } = await db
     .from("finance")
@@ -278,16 +271,16 @@ async function loadFinance(){
   });
 }
 
-/* ================= PDF ================= */
+/* PDF */
 function printGoats(){
-  document.getElementById("financeReport").style.display="none";
+  financeReport.style.display="none";
   window.print();
-  document.getElementById("financeReport").style.display="block";
+  financeReport.style.display="block";
 }
 function printFinance(){
-  document.getElementById("goatReport").style.display="none";
+  goatReport.style.display="none";
   window.print();
-  document.getElementById("goatReport").style.display="block";
+  goatReport.style.display="block";
 }
 
 /* INIT */
